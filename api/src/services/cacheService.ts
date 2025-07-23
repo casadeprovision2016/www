@@ -155,3 +155,4 @@ class CacheService {
 }
 
 export const cacheService = new CacheService();
+export const redis = cacheService['redis']; // Export redis instance for direct access

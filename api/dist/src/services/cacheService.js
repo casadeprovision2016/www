@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cacheService = void 0;
+exports.redis = exports.cacheService = void 0;
 const ioredis_1 = __importDefault(require("ioredis"));
 class CacheService {
     constructor() {
@@ -144,4 +144,5 @@ class CacheService {
     }
 }
 exports.cacheService = new CacheService();
+exports.redis = exports.cacheService['redis']; // Export redis instance for direct access
 //# sourceMappingURL=cacheService.js.map

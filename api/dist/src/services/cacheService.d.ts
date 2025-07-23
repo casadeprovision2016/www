@@ -1,3 +1,4 @@
+import Redis from 'ioredis';
 declare class CacheService {
     private redis;
     constructor();
@@ -17,5 +18,6 @@ declare class CacheService {
     healthCheck(): Promise<boolean>;
 }
 export declare const cacheService: CacheService;
+export declare const redis: Redis;
 export {};
 //# sourceMappingURL=cacheService.d.ts.map

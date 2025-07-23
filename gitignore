@@ -1,0 +1,96 @@
+# Node.js
+node_modules/
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Build output
+/dist/
+/build/
+
+# API
+api/node_modules/
+api/dist/
+api/build/
+api/.env*
+api/.cache/
+api/.turbo/
+api/.next/
+api/.DS_Store
+api/.vscode/
+api/*.log
+api/logs/
+api/coverage/
+api/.eslintcache
+api/.tsbuildinfo
+
+# Vite
+/.vite/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.env*
+frontend/.cache/
+frontend/.turbo/
+frontend/.next/
+frontend/.DS_Store
+frontend/.vscode/
+frontend/*.log
+frontend/public/lovable-uploads/
+frontend/coverage/
+frontend/.eslintcache
+frontend/.tsbuildinfo
+frontend/.npm
+frontend/.eslintcache
+frontend/.node_repl_history
+frontend/*.tgz
+frontend/.yarn-integrity
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/.idea
+frontend/*.swp
+frontend/*.swo
+frontend/.DS_Store
+frontend/.DS_Store?
+frontend/._*
+frontend/.Spotlight-V100
+frontend/.Trashes
+frontend/ehthumbs.db
+frontend/Thumbs.db
+
+# Bun
+bun.lockb
+
+# VS Code
+.vscode/
+
+# Environment
+.env
+.env.*
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Others
+*.swp
+*.swo
+
+
+
+# Shared
+shared/types/*.js
+shared/types/*.js.map

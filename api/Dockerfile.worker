@@ -32,55 +32,51 @@ COPY --from=builder --chown=cccp:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=cccp:nodejs /app/dist ./dist
 COPY --from=builder --chown=cccp:nodejs /app/package*.json ./
 
-# Criar script específico para worker
+# Script de entrada do worker usando os arquivos TypeScript compilados
 COPY --chown=cccp:nodejs <<EOF /app/worker.js
-const cron = require('node-cron');
-const { logger } = require('./dist/utils/logger');
+const { BackgroundJobsWorker } = require('./dist/src/workers/backgroundJobs');
+const { logger } = require('./dist/src/utils/logger');
 
-// Inicializar serviços necessários
-async function initWorker() {
-  logger.info('🚀 Worker de background jobs iniciado');
-  
-  // Relatórios diários às 6h
-  cron.schedule('0 6 * * *', async () => {
-    logger.info('Executando relatórios diários...');
-    // Lógica de relatórios aqui
-  });
+async function startWorker() {
+  try {
+    logger.info('🚀 Iniciando Background Jobs Worker...');
+    
+    // Verificar variáveis de ambiente necessárias
+    const requiredEnvVars = [
+      'SUPABASE_URL',
+      'SUPABASE_SERVICE_KEY',
+      'REDIS_URL'
+    ];
 
-  // Backup semanal aos domingos às 2h
-  cron.schedule('0 2 * * 0', async () => {
-    logger.info('Executando backup semanal...');
-    // Lógica de backup aqui
-  });
+    for (const envVar of requiredEnvVars) {
+      if (!process.env[envVar]) {
+        throw new Error(\`Variável de ambiente \${envVar} é obrigatória\`);
+      }
+    }
 
-  // Limpeza de logs mensalmente
-  cron.schedule('0 0 1 * *', async () => {
-    logger.info('Limpando logs antigos...');
-    // Lógica de limpeza aqui
-  });
+    // Inicializar e iniciar o worker
+    const worker = new BackgroundJobsWorker();
+    await worker.start();
 
-  // Verificação de saúde a cada 5 minutos
-  cron.schedule('*/5 * * * *', async () => {
-    logger.info('Health check do worker');
-  });
+    logger.info('✅ Background Jobs Worker iniciado com sucesso');
+
+    // Manter o processo vivo
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    });
+
+    process.on('uncaughtException', (error) => {
+      logger.error('Uncaught Exception:', error);
+      process.exit(1);
+    });
+
+  } catch (error) {
+    logger.error('❌ Erro ao iniciar worker:', error);
+    process.exit(1);
+  }
 }
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('Worker recebeu SIGTERM, finalizando...');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  logger.info('Worker recebeu SIGINT, finalizando...');
-  process.exit(0);
-});
-
-// Iniciar worker
-initWorker().catch(error => {
-  logger.error('Erro ao iniciar worker:', error);
-  process.exit(1);
-});
+startWorker();
 EOF
 
 RUN mkdir -p logs && chown -R cccp:nodejs logs

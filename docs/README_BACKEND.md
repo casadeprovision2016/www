@@ -4,18 +4,18 @@ Sistema de gerenciamento para Casa de Provisão construído com Node.js, Express
 
 ## 🚀 Funcionalidades
 
-- **Autenticação e Autorização**: JWT via Supabase Auth com RBAC
+- **Autenticación y Autorización**: JWT vía Supabase Auth con RBAC
 - **Gestão de Eventos**: CRUD completo com inscrições e estatísticas
 - **Gestão de Membros**: Controle de membros com histórico e ministérios
 - **Gestão de Doações**: Registro de doações com upload de comprovantes
-- **Gestão de Ministérios**: Organização de ministérios e membros
+- **Gestión de Ministerios**: Organización de ministerios y miembros
 - **Transmissões ao Vivo**: Controle de streams e gravações
 - **Visitas Pastorais**: Agendamento e controle de visitas
 - **Relatórios**: Dashboard e relatórios personalizados
 - **Cache Redis**: Sistema de cache para alta performance
 - **Upload de Arquivos**: Processamento de imagens com Sharp
 - **Logs Estruturados**: Sistema de logging com Winston
-- **Rate Limiting**: Proteção contra abuso de API
+- **Rate Limiting**: Protección contra abuso de API
 - **Health Checks**: Monitoramento de saúde dos serviços
 
 ## 📋 Pré-requisitos
@@ -25,7 +25,7 @@ Sistema de gerenciamento para Casa de Provisão construído com Node.js, Express
 - Conta no Supabase
 - Redis (ou Upstash para cloud)
 
-## 🛠️ Instalação
+## 🛠️ Instalación
 
 1. **Clone o repositório**
 ```bash
@@ -57,7 +57,7 @@ npm run dev
 docker-compose up -d
 ```
 
-### Produção
+### Producción
 ```bash
 # Deploy completo
 ./scripts/deploy.sh production
@@ -77,8 +77,8 @@ api/
 │   ├── services/           # Serviços (cache, upload, etc.)
 │   ├── utils/              # Utilitários (logger, etc.)
 │   ├── types/              # Tipos TypeScript específicos da API
-│   └── app.ts              # Aplicação principal
-├── logs/                   # Logs da aplicação
+│   └── app.ts              # Aplicación principal
+├── logs/                   # Logs de la aplicación
 ├── Dockerfile              # Imagem Docker para API
 ├── Dockerfile.worker       # Imagem Docker para workers
 └── package.json
@@ -96,16 +96,16 @@ api/
 ## 🛡️ Segurança
 
 - **Helmet**: Headers de segurança HTTP
-- **CORS**: Configuração restritiva de CORS
-- **Rate Limiting**: Proteção contra spam/DDoS
-- **Validação de Entrada**: Zod + DOMPurify
-- **Sanitização**: Limpeza de dados de entrada
+- **CORS**: Configuración restrictiva de CORS
+- **Rate Limiting**: Protección contra spam/DDoS
+- **Validación de Entrada**: Zod + DOMPurify
+- **Sanitización**: Limpieza de datos de entrada
 - **JWT**: Tokens seguros via Supabase
-- **Upload Seguro**: Validação de tipos e processamento
+- **Upload Seguro**: Validación de tipos y procesamiento
 
 ## 📊 API Endpoints
 
-### Autenticação
+### Autenticación
 - `POST /api/auth/login` - Login do usuário
 - `POST /api/auth/logout` - Logout
 - `POST /api/auth/refresh` - Renovar token
@@ -129,10 +129,10 @@ api/
 
 ### Doações
 - `GET /api/donations` - Listar doações
-- `POST /api/donations` - Criar doação
+- `POST /api/donations` - Crear donación
 - `GET /api/donations/:id` - Buscar por ID
-- `PUT /api/donations/:id` - Atualizar doação
-- `DELETE /api/donations/:id` - Deletar doação
+- `PUT /api/donations/:id` - Actualizar donación
+- `DELETE /api/donations/:id` - Eliminar donación
 - `POST /api/donations/:id/receipt` - Upload comprovante
 - `GET /api/donations/export` - Exportar dados
 
@@ -211,12 +211,12 @@ npm run dev
 ./scripts/deploy.sh staging
 ```
 
-### Produção
+### Producción
 ```bash
 ./scripts/deploy.sh production
 ```
 
-## 🔧 Configuração do Banco
+## 🔧 Configuración del Banco
 
 O sistema utiliza Supabase como backend. As principais tabelas são:
 
@@ -236,7 +236,7 @@ O sistema gera logs estruturados em JSON:
 - `logs/error.log` - Apenas erros
 - Console - Em desenvolvimento
 
-## 🤝 Contribuição
+## 🤝 Contribución
 
 1. Fork o projeto
 2. Crie uma branch para sua feature

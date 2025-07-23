@@ -1,4 +1,4 @@
-# 🌩️ Configuração do Cloudflare Tunnel - CCCP
+# 🌩️ Configuración del Cloudflare Tunnel - CCCP
 
 ## 📋 Pré-requisitos
 
@@ -6,7 +6,7 @@
 2. **Domínio**: Domínio gerenciado pelo Cloudflare (pode ser gratuito)
 3. **Zero Trust**: Acesso ao painel Zero Trust do Cloudflare
 
-## 🚀 Configuração Passo a Passo
+## 🚀 Configuración Paso a Paso
 
 ### 1. Criar o Tunnel no Cloudflare
 
@@ -68,7 +68,7 @@ No painel do túnel criado, configure as rotas:
 ### 5. Iniciar o Sistema com Cloudflare
 
 ```bash
-# Carregar variáveis de produção
+# Cargar variables de producción
 export $(cat .env.production | xargs)
 
 # Iniciar todos os serviços incluindo Cloudflare
@@ -78,7 +78,7 @@ docker compose --profile production up -d
 docker compose ps
 ```
 
-## 🔍 Verificação e Testes
+## 🔍 Verificación y Pruebas
 
 ### Verificar Status do Tunnel
 
@@ -106,24 +106,24 @@ O túnel Cloudflare expõe métricas na porta `8080`:
 
 - **Métricas**: `http://localhost:8080/metrics`
 - **Health Check**: Automático via Docker
-- **Logs**: Estruturados com rotação automática
+- **Logs**: Estructurados con rotación automática
 
 ## 🔧 Configurações Avançadas
 
-### Personalizar Configuração do Tunnel
+### Personalizar Configuración del Tunnel
 
 Edite o arquivo `cloudflare/config.yml` para:
 
 - Adicionar mais rotas
-- Configurar autenticação
+- Configurar autenticación
 - Ajustar timeouts
 - Personalizar headers
 
-### Exemplo de Configuração Personalizada
+### Ejemplo de Configuración Personalizada
 
 ```yaml
 ingress:
-  # Rota com autenticação
+  # Ruta con autenticación
   - hostname: admin.cccp.suaempresa.com
     service: http://frontend:80
     originRequest:
@@ -147,10 +147,10 @@ ingress:
 
 O Cloudflare adiciona automaticamente:
 
-- **DDoS Protection**: Proteção contra ataques
+- **DDoS Protection**: Protección contra ataques
 - **WAF**: Web Application Firewall
 - **SSL/TLS**: Certificados automáticos
-- **Rate Limiting**: Limitação de taxa
+- **Rate Limiting**: Limitación de tasa
 
 ### Configurações Recomendadas
 
@@ -175,8 +175,8 @@ No painel Cloudflare, configure:
    ```
 
 2. **DNS não resolve**:
-   - Verificar configuração CNAME
-   - Aguardar propagação DNS (até 48h)
+   - Verificar configuración CNAME
+   - Esperar propagación DNS (hasta 48h)
 
 3. **Serviços internos não respondem**:
    ```bash
@@ -204,7 +204,7 @@ docker compose ps -a
 
 Para problemas específicos:
 
-1. **Documentação Cloudflare**: [developers.cloudflare.com](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/)
+1. **Documentación Cloudflare**: [developers.cloudflare.com](https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/)
 2. **Logs do Sistema**: `docker compose logs`
 3. **Issues do GitHub**: Abra uma issue no repositório
 

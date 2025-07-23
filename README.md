@@ -13,14 +13,14 @@
 
 ## 💻 Tecnologias e Serviços
 
-Esta seção detalha as principais tecnologias e serviços utilizados no projeto, explicando o propósito de cada um.
+Esta sección detalla las principales tecnologías y servicios utilizados en el proyecto, explicando el propósito de cada uno.
 
 - **[React 18](https://react.dev/)**: Biblioteca para construir interfaces de usuário com componentes reutilizáveis e eficientes.
-- **[TypeScript](https://www.typescriptlang.org/docs/)**: Superset do JavaScript que adiciona tipagem estática, melhorando a manutenibilidade e a detecção de erros.
+- **[TypeScript](https://www.typescriptlang.org/docs/)**: Superset de JavaScript que añade tipado estático, mejorando la mantenibilidad y la detección de errores.
 - **[Vite](https://vitejs.dev/guide/)**: Ferramenta de build moderna que oferece um desenvolvimento rápido com Hot Module Replacement (HMR).
-- **[ShadCN/UI](https://ui.shadcn.com/docs)**: Coleção de componentes de UI reutilizáveis e acessíveis, construídos sobre Tailwind CSS e Radix UI.
+- **[ShadCN/UI](https://ui.shadcn.com/docs)**: Colección de componentes de UI reutilizables y accesibles, construidos sobre Tailwind CSS y Radix UI.
 - **[Tailwind CSS](https://tailwindcss.com/docs)**: Framework CSS utility-first para criar designs customizados rapidamente sem sair do HTML.
-- **[Node.js](https://nodejs.org/en/docs/)**: Ambiente de execução JavaScript no servidor, permitindo a construção de APIs rápidas e escaláveis.
+- **[Node.js](https://nodejs.org/en/docs/)**: Entorno de ejecución JavaScript en el servidor, permitiendo la construcción de APIs rápidas y escalables.
 - **[Express](https://expressjs.com/)**: Framework minimalista para Node.js, usado para criar a estrutura da API RESTful.
 - **[Supabase](https://supabase.com/docs)**: Plataforma Backend-as-a-Service (BaaS) que oferece banco de dados PostgreSQL, autenticação, storage e APIs auto-geradas.
   - **[Database](https://supabase.com/docs/guides/database/overview/)**: Banco de dados relacional robusto e escalável.

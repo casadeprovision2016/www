@@ -1,15 +1,15 @@
-# Configuração do Cloudflare Tunnel
+# Configuración del Cloudflare Tunnel
 
 Este documento explica como o Cloudflare Tunnel está configurado no projeto CCCP.
 
 ## Domínios Configurados
 
-### Produção
+### Producción
 - **casadeprovision.es** → Frontend (frontend:80)
 - **www.casadeprovision.es** → Frontend (frontend:80)
 - **api.casadeprovision.es** → Backend (backend:4000)
 
-## Configuração Docker
+## Configuración Docker
 
 ### Serviços
 - `frontend`: React app rodando na porta 80 (internamente)
@@ -38,16 +38,16 @@ docker-compose up frontend backend redis
 # Backend: http://localhost:4000
 ```
 
-### Produção com Cloudflare Tunnel
+### Producción con Cloudflare Tunnel
 ```bash
-# Executar com o perfil de produção
+# Ejecutar con el perfil de producción
 docker-compose --profile production up -d
 
 # Verificar logs do túnel
 docker-compose logs -f cloudflare-tunnel
 ```
 
-## Verificação de Status
+## Verificación de Estado
 
 ### Health Checks
 - Frontend: `curl http://frontend:80/health`
@@ -63,7 +63,7 @@ docker-compose logs cloudflare-tunnel
 docker-compose logs -f
 ```
 
-## Configuração do Túnel no Cloudflare
+## Configuración del Túnel en Cloudflare
 
 1. Acesse o [Cloudflare Dashboard](https://dash.cloudflare.com)
 2. Vá para **Zero Trust** > **Access** > **Tunnels**
@@ -73,16 +73,16 @@ docker-compose logs -f
    - `www.casadeprovision.es` → `http://frontend:80`
    - `api.casadeprovision.es` → `http://backend:4000`
 
-## Arquivos de Configuração
+## Archivos de Configuración
 
 ### `cloudflare/config.yml`
-Configuração das rotas do túnel
+Configuración de las rutas del túnel
 
 ### `cloudflare/start-tunnel.sh`
-Script de inicialização com verificações de saúde
+Script de inicialización con verificaciones de salud
 
 ### `docker-compose.yml`
-Definição dos serviços e dependências
+Definición de los servicios y dependencias
 
 ## Troubleshooting
 
@@ -99,7 +99,7 @@ Definição dos serviços e dependências
 ### API não responde
 1. Verifique se o backend está rodando
 2. Teste o health check: `curl http://localhost:4000/health`
-3. Verifique configuração CORS no backend
+3. Verifique configuración CORS en el backend
 
 ### CORS errors
 - O backend está configurado para aceitar requisições dos domínios configurados

@@ -1,0 +1,98 @@
+# Dockerfile para worker de background jobs
+FROM node:18-alpine AS builder
+
+RUN apk add --no-cache python3 make g++ vips-dev
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY tsconfig.json ./
+
+RUN npm ci && npm cache clean --force
+
+COPY src/ ./src/
+COPY shared/ ./shared/
+
+RUN npm run build
+
+# Estágio final para worker
+FROM node:18-alpine
+
+RUN apk add --no-cache \
+    vips \
+    curl \
+    tini
+
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S cccp -u 1001 -G nodejs
+
+WORKDIR /app
+
+COPY --from=builder --chown=cccp:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=cccp:nodejs /app/dist ./dist
+COPY --from=builder --chown=cccp:nodejs /app/package*.json ./
+
+# Criar script específico para worker
+COPY --chown=cccp:nodejs <<EOF /app/worker.js
+const cron = require('node-cron');
+const { logger } = require('./dist/utils/logger');
+
+// Inicializar serviços necessários
+async function initWorker() {
+  logger.info('🚀 Worker de background jobs iniciado');
+  
+  // Relatórios diários às 6h
+  cron.schedule('0 6 * * *', async () => {
+    logger.info('Executando relatórios diários...');
+    // Lógica de relatórios aqui
+  });
+
+  // Backup semanal aos domingos às 2h
+  cron.schedule('0 2 * * 0', async () => {
+    logger.info('Executando backup semanal...');
+    // Lógica de backup aqui
+  });
+
+  // Limpeza de logs mensalmente
+  cron.schedule('0 0 1 * *', async () => {
+    logger.info('Limpando logs antigos...');
+    // Lógica de limpeza aqui
+  });
+
+  // Verificação de saúde a cada 5 minutos
+  cron.schedule('*/5 * * * *', async () => {
+    logger.info('Health check do worker');
+  });
+}
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('Worker recebeu SIGTERM, finalizando...');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('Worker recebeu SIGINT, finalizando...');
+  process.exit(0);
+});
+
+// Iniciar worker
+initWorker().catch(error => {
+  logger.error('Erro ao iniciar worker:', error);
+  process.exit(1);
+});
+EOF
+
+RUN mkdir -p logs && chown -R cccp:nodejs logs
+
+USER cccp
+
+ENV NODE_ENV=production
+
+# Health check específico para worker
+HEALTHCHECK --interval=60s --timeout=10s --start-period=10s --retries=3 \
+  CMD test -f /tmp/worker-health || exit 1
+
+ENTRYPOINT ["/sbin/tini", "--"]
+
+CMD ["node", "worker.js"]

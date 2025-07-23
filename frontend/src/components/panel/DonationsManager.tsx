@@ -1,51 +1,97 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { DollarSign, Edit, Save, X } from 'lucide-react';
-
-interface DonationInfo {
-  iban: string;
-  bic: string;
-  titular: string;
-  bizum: string;
-  verse: string;
-  additionalMethods: string;
-}
+import { DollarSign, Edit, Save, X, Loader2 } from 'lucide-react';
+import { useDonationInfo, useUpdateDonationInfo } from '@/hooks/useDonations';
 
 const DonationsManager = () => {
+  // React Query hooks
+  const { data: donationInfo, isLoading, error, refetch } = useDonationInfo();
+  const updateDonationInfoMutation = useUpdateDonationInfo();
+  
   const [isEditing, setIsEditing] = useState(false);
-  const [donationInfo, setDonationInfo] = useState<DonationInfo>({
-    iban: 'ES1021001419020200597614',
-    bic: 'CAIXESBBXXX',
-    titular: 'Centro Cristiano Casa de Provisión',
-    bizum: 'En construcción',
-    verse: '"Cada uno dé como propuso en su corazón: no con tristeza, ni por necesidad, porque Dios ama al dador alegre." — 2 Corintios 9:7a',
+  const [formData, setFormData] = useState({
+    iban: '',
+    bic: '',
+    titular: '',
+    bizum: '',
+    verse: '',
     additionalMethods: ''
   });
 
-  useEffect(() => {
-    const storedInfo = localStorage.getItem('donationInfo');
-    if (storedInfo) {
-      setDonationInfo(JSON.parse(storedInfo));
+  // Update form data when donationInfo changes
+  React.useEffect(() => {
+    if (donationInfo) {
+      setFormData({
+        iban: donationInfo.iban,
+        bic: donationInfo.bic,
+        titular: donationInfo.titular,
+        bizum: donationInfo.bizum,
+        verse: donationInfo.verse,
+        additionalMethods: donationInfo.additionalMethods,
+      });
     }
-  }, []);
+  }, [donationInfo]);
 
-  const handleSave = () => {
-    localStorage.setItem('donationInfo', JSON.stringify(donationInfo));
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      await updateDonationInfoMutation.mutateAsync(formData);
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating donation info:', error);
+    }
   };
 
   const handleCancel = () => {
-    const storedInfo = localStorage.getItem('donationInfo');
-    if (storedInfo) {
-      setDonationInfo(JSON.parse(storedInfo));
+    if (donationInfo) {
+      setFormData({
+        iban: donationInfo.iban,
+        bic: donationInfo.bic,
+        titular: donationInfo.titular,
+        bizum: donationInfo.bizum,
+        verse: donationInfo.verse,
+        additionalMethods: donationInfo.additionalMethods,
+      });
     }
     setIsEditing(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-church-gold" />
+        <span className="ml-2 text-gray-600">Cargando información de donaciones...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-church-blue-dark">Gestión de Donaciones</h2>
+          <Button onClick={() => refetch()} variant="outline">
+            Reintentar
+          </Button>
+        </div>
+        <div className="text-center py-8 text-red-600">
+          Error al cargar información de donaciones: {error.message}
+        </div>
+      </div>
+    );
+  }
+
+  if (!donationInfo) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        No se encontró información de donaciones.
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -55,6 +101,7 @@ const DonationsManager = () => {
           <Button
             onClick={() => setIsEditing(true)}
             className="bg-church-gold hover:bg-church-gold-dark text-white"
+            disabled={updateDonationInfoMutation.isPending}
           >
             <Edit className="h-4 w-4 mr-2" />
             Editar Información
@@ -64,13 +111,19 @@ const DonationsManager = () => {
             <Button
               onClick={handleSave}
               className="bg-church-gold hover:bg-church-gold-dark text-white"
+              disabled={updateDonationInfoMutation.isPending}
             >
-              <Save className="h-4 w-4 mr-2" />
+              {updateDonationInfoMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
               Guardar
             </Button>
             <Button
               onClick={handleCancel}
               variant="outline"
+              disabled={updateDonationInfoMutation.isPending}
             >
               <X className="h-4 w-4 mr-2" />
               Cancelar
@@ -92,8 +145,8 @@ const DonationsManager = () => {
               <Label htmlFor="iban">IBAN</Label>
               <Input
                 id="iban"
-                value={donationInfo.iban}
-                onChange={(e) => setDonationInfo({...donationInfo, iban: e.target.value})}
+                value={formData.iban}
+                onChange={(e) => setFormData({...formData, iban: e.target.value})}
                 disabled={!isEditing}
               />
             </div>
@@ -101,8 +154,8 @@ const DonationsManager = () => {
               <Label htmlFor="bic">BIC/SWIFT</Label>
               <Input
                 id="bic"
-                value={donationInfo.bic}
-                onChange={(e) => setDonationInfo({...donationInfo, bic: e.target.value})}
+                value={formData.bic}
+                onChange={(e) => setFormData({...formData, bic: e.target.value})}
                 disabled={!isEditing}
               />
             </div>
@@ -112,8 +165,8 @@ const DonationsManager = () => {
             <Label htmlFor="titular">Titular</Label>
             <Input
               id="titular"
-              value={donationInfo.titular}
-              onChange={(e) => setDonationInfo({...donationInfo, titular: e.target.value})}
+              value={formData.titular}
+              onChange={(e) => setFormData({...formData, titular: e.target.value})}
               disabled={!isEditing}
             />
           </div>
@@ -122,8 +175,8 @@ const DonationsManager = () => {
             <Label htmlFor="bizum">Bizum</Label>
             <Input
               id="bizum"
-              value={donationInfo.bizum}
-              onChange={(e) => setDonationInfo({...donationInfo, bizum: e.target.value})}
+              value={formData.bizum}
+              onChange={(e) => setFormData({...formData, bizum: e.target.value})}
               disabled={!isEditing}
             />
           </div>
@@ -132,8 +185,8 @@ const DonationsManager = () => {
             <Label htmlFor="verse">Versículo Bíblico</Label>
             <Textarea
               id="verse"
-              value={donationInfo.verse}
-              onChange={(e) => setDonationInfo({...donationInfo, verse: e.target.value})}
+              value={formData.verse}
+              onChange={(e) => setFormData({...formData, verse: e.target.value})}
               disabled={!isEditing}
               rows={3}
             />
@@ -143,8 +196,8 @@ const DonationsManager = () => {
             <Label htmlFor="additionalMethods">Métodos Adicionales de Donación</Label>
             <Textarea
               id="additionalMethods"
-              value={donationInfo.additionalMethods}
-              onChange={(e) => setDonationInfo({...donationInfo, additionalMethods: e.target.value})}
+              value={formData.additionalMethods}
+              onChange={(e) => setFormData({...formData, additionalMethods: e.target.value})}
               disabled={!isEditing}
               rows={3}
               placeholder="Agregar información sobre otros métodos de donación..."

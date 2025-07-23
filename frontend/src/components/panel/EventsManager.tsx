@@ -1,126 +1,61 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Edit, Trash2, Calendar, Star, Phone, Mail, Users } from 'lucide-react';
+import { Plus, Edit, Trash2, Calendar, Star, Phone, Mail, Users, Loader2 } from 'lucide-react';
+import { useEvents, useCreateEvent, useUpdateEvent, useDeleteEvent, CreateEventData } from '@/hooks/useEvents';
+import { useDeleteConfirmation } from '@/components/ui/confirmation-dialog';
 
-interface Event {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  time: string;
-  location: string;
-  type: string;
-  isHighlighted?: boolean;
-  contact?: {
-    name: string;
-    phone?: string;
-    email?: string;
-  };
-  registrationLink?: string;
-}
+// Using the Event interface from the hooks
 
 const EventsManager = () => {
-  const [events, setEvents] = useState<Event[]>([]);
+  // React Query hooks
+  const { data: events = [], isLoading, error, refetch } = useEvents();
+  const createEventMutation = useCreateEvent();
+  const updateEventMutation = useUpdateEvent();
+  const deleteEventMutation = useDeleteEvent();
+  
   const [showForm, setShowForm] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editingEvent, setEditingEvent] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     date: '',
     time: '',
     location: '',
-    type: 'culto',
-    isHighlighted: false,
-    contactName: '',
-    contactPhone: '',
-    contactEmail: '',
-    registrationLink: ''
+    category: 'culto',
+    capacity: undefined as number | undefined,
   });
 
-  useEffect(() => {
-    // Cargar eventos del localStorage
-    const storedEvents = localStorage.getItem('events');
-    if (storedEvents) {
-      setEvents(JSON.parse(storedEvents));
-    } else {
-      // Eventos de ejemplo
-      const exampleEvents: Event[] = [
-        {
-          id: '1',
-          title: 'Culto Dominical',
-          description: 'Servicio dominical de adoración',
-          date: '2024-01-07',
-          time: '09:00',
-          location: 'Santuario Principal',
-          type: 'culto',
-          isHighlighted: true,
-          contact: {
-            name: 'Pastor Juan',
-            phone: '+593 99 123 4567',
-            email: 'pastor@casadeprovision.org'
-          }
-        },
-        {
-          id: '2',
-          title: 'Estudio Bíblico',
-          description: 'Estudio de la Palabra',
-          date: '2024-01-10',
-          time: '19:30',
-          location: 'Sala de Conferencias',
-          type: 'estudio'
-        }
-      ];
-      setEvents(exampleEvents);
-      localStorage.setItem('events', JSON.stringify(exampleEvents));
-    }
-  }, []);
-
-  const saveEvents = (newEvents: Event[]) => {
-    setEvents(newEvents);
-    localStorage.setItem('events', JSON.stringify(newEvents));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const eventData: Event = {
-      id: editingEvent?.id || Date.now().toString(),
+    const eventData: CreateEventData = {
       title: formData.title,
       description: formData.description,
       date: formData.date,
       time: formData.time,
       location: formData.location,
-      type: formData.type,
-      isHighlighted: formData.isHighlighted,
-      ...(formData.contactName && {
-        contact: {
-          name: formData.contactName,
-          ...(formData.contactPhone && { phone: formData.contactPhone }),
-          ...(formData.contactEmail && { email: formData.contactEmail })
-        }
-      }),
-      ...(formData.registrationLink && { registrationLink: formData.registrationLink })
+      category: formData.category,
+      capacity: formData.capacity,
     };
     
-    if (editingEvent) {
-      // Editar evento existente
-      const updatedEvents = events.map(event => 
-        event.id === editingEvent.id ? eventData : event
-      );
-      saveEvents(updatedEvents);
-      setEditingEvent(null);
-    } else {
-      // Crear nuevo evento
-      saveEvents([...events, eventData]);
-    }
+    try {
+      if (editingEvent) {
+        await updateEventMutation.mutateAsync({ id: editingEvent.id, ...eventData });
+        setEditingEvent(null);
+      } else {
+        await createEventMutation.mutateAsync(eventData);
+      }
 
-    resetForm();
-    setShowForm(false);
+      resetForm();
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error saving event:', error);
+    }
   };
 
   const resetForm = () => {
@@ -130,16 +65,12 @@ const EventsManager = () => {
       date: '',
       time: '',
       location: '',
-      type: 'culto',
-      isHighlighted: false,
-      contactName: '',
-      contactPhone: '',
-      contactEmail: '',
-      registrationLink: ''
+      category: 'culto',
+      capacity: undefined,
     });
   };
 
-  const handleEdit = (event: Event) => {
+  const handleEdit = (event: any) => {
     setEditingEvent(event);
     setFormData({
       title: event.title,
@@ -147,25 +78,24 @@ const EventsManager = () => {
       date: event.date,
       time: event.time,
       location: event.location,
-      type: event.type,
-      isHighlighted: event.isHighlighted || false,
-      contactName: event.contact?.name || '',
-      contactPhone: event.contact?.phone || '',
-      contactEmail: event.contact?.email || '',
-      registrationLink: event.registrationLink || ''
+      category: event.category,
+      capacity: event.capacity,
     });
     setShowForm(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('¿Estás seguro de que quieres eliminar este evento?')) {
-      const updatedEvents = events.filter(event => event.id !== id);
-      saveEvents(updatedEvents);
+      try {
+        await deleteEventMutation.mutateAsync(id);
+      } catch (error) {
+        console.error('Error deleting event:', error);
+      }
     }
   };
 
-  const getEventTypeColor = (type: string) => {
-    switch (type) {
+  const getEventTypeColor = (category: string) => {
+    switch (category) {
       case 'culto': return 'bg-church-gold';
       case 'estudio': return 'bg-church-blue';
       case 'jovenes': return 'bg-green-600';
@@ -175,6 +105,31 @@ const EventsManager = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-church-gold" />
+        <span className="ml-2 text-gray-600">Cargando eventos...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-church-blue-dark">Gestión de Eventos</h2>
+          <Button onClick={() => refetch()} variant="outline">
+            Reintentar
+          </Button>
+        </div>
+        <div className="text-center py-8 text-red-600">
+          Error al cargar eventos: {error.message}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -182,6 +137,7 @@ const EventsManager = () => {
         <Button
           onClick={() => setShowForm(true)}
           className="bg-church-gold hover:bg-church-gold-dark text-white"
+          disabled={createEventMutation.isPending}
         >
           <Plus className="h-4 w-4 mr-2" />
           Nuevo Evento
@@ -208,11 +164,11 @@ const EventsManager = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="type">Tipo</Label>
+                  <Label htmlFor="category">Categoría</Label>
                   <select
-                    id="type"
-                    value={formData.type}
-                    onChange={(e) => setFormData({...formData, type: e.target.value})}
+                    id="category"
+                    value={formData.category}
+                    onChange={(e) => setFormData({...formData, category: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                   >
                     <option value="culto">Culto</option>
@@ -234,7 +190,7 @@ const EventsManager = () => {
                 />
               </div>
 
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="date">Fecha</Label>
                   <Input
@@ -264,70 +220,28 @@ const EventsManager = () => {
                     required
                   />
                 </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="highlighted"
-                  checked={formData.isHighlighted}
-                  onCheckedChange={(checked) => setFormData({...formData, isHighlighted: checked})}
-                />
-                <Label htmlFor="highlighted" className="flex items-center gap-2">
-                  <Star className="h-4 w-4 text-church-gold" />
-                  Evento Destacado
-                </Label>
-              </div>
-
-              <div className="border-t pt-4">
-                <h4 className="font-semibold mb-4 flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Información de Contacto (Opcional)
-                </h4>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="contactName">Nombre del Contacto</Label>
-                    <Input
-                      id="contactName"
-                      value={formData.contactName}
-                      onChange={(e) => setFormData({...formData, contactName: e.target.value})}
-                      placeholder="Ej: Pastor Juan"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contactPhone">Teléfono</Label>
-                    <Input
-                      id="contactPhone"
-                      value={formData.contactPhone}
-                      onChange={(e) => setFormData({...formData, contactPhone: e.target.value})}
-                      placeholder="Ej: +593 99 123 4567"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contactEmail">Email</Label>
-                    <Input
-                      id="contactEmail"
-                      type="email"
-                      value={formData.contactEmail}
-                      onChange={(e) => setFormData({...formData, contactEmail: e.target.value})}
-                      placeholder="Ej: pastor@iglesia.org"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="capacity">Capacidad (Opcional)</Label>
+                  <Input
+                    id="capacity"
+                    type="number"
+                    min="1"
+                    value={formData.capacity || ''}
+                    onChange={(e) => setFormData({...formData, capacity: e.target.value ? parseInt(e.target.value) : undefined})}
+                    placeholder="Ej: 50"
+                  />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="registrationLink">Enlace de Registro (Opcional)</Label>
-                <Input
-                  id="registrationLink"
-                  type="url"
-                  value={formData.registrationLink}
-                  onChange={(e) => setFormData({...formData, registrationLink: e.target.value})}
-                  placeholder="https://ejemplo.com/registro"
-                />
-              </div>
-
               <div className="flex gap-2">
-                <Button type="submit" className="bg-church-gold hover:bg-church-gold-dark text-white">
+                <Button 
+                  type="submit" 
+                  className="bg-church-gold hover:bg-church-gold-dark text-white"
+                  disabled={createEventMutation.isPending || updateEventMutation.isPending}
+                >
+                  {(createEventMutation.isPending || updateEventMutation.isPending) && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  )}
                   {editingEvent ? 'Actualizar' : 'Crear'} Evento
                 </Button>
                 <Button 
@@ -338,6 +252,7 @@ const EventsManager = () => {
                     setEditingEvent(null);
                     resetForm();
                   }}
+                  disabled={createEventMutation.isPending || updateEventMutation.isPending}
                 >
                   Cancelar
                 </Button>
@@ -349,17 +264,22 @@ const EventsManager = () => {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {events.map((event) => (
-          <Card key={event.id} className={event.isHighlighted ? 'ring-2 ring-church-gold' : ''}>
+          <Card key={event.id} className={event.status === 'scheduled' ? 'ring-2 ring-church-gold' : ''}>
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <div className={`inline-block px-2 py-1 rounded text-xs text-white ${getEventTypeColor(event.type)}`}>
-                      {event.type}
+                    <div className={`inline-block px-2 py-1 rounded text-xs text-white ${getEventTypeColor(event.category)}`}>
+                      {event.category}
                     </div>
-                    {event.isHighlighted && (
-                      <Star className="h-4 w-4 text-church-gold fill-current" />
-                    )}
+                    <div className={`inline-block px-2 py-1 rounded text-xs ${
+                      event.status === 'scheduled' ? 'bg-green-100 text-green-800' :
+                      event.status === 'completed' ? 'bg-gray-100 text-gray-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {event.status === 'scheduled' ? 'Programado' : 
+                       event.status === 'completed' ? 'Completado' : 'Cancelado'}
+                    </div>
                   </div>
                   <CardTitle className="text-lg">{event.title}</CardTitle>
                 </div>
@@ -368,6 +288,7 @@ const EventsManager = () => {
                     size="sm"
                     variant="ghost"
                     onClick={() => handleEdit(event)}
+                    disabled={deleteEventMutation.isPending}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -376,8 +297,13 @@ const EventsManager = () => {
                     variant="ghost"
                     onClick={() => handleDelete(event.id)}
                     className="text-red-600 hover:text-red-800"
+                    disabled={deleteEventMutation.isPending}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {deleteEventMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -390,17 +316,10 @@ const EventsManager = () => {
                   <span>{event.date} - {event.time}</span>
                 </div>
                 <div className="text-gray-600">{event.location}</div>
-                {event.contact && (
-                  <div className="border-t pt-2 mt-2">
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <Users className="h-3 w-3" />
-                      <span>{event.contact.name}</span>
-                    </div>
-                  </div>
-                )}
-                {event.registrationLink && (
-                  <div className="text-xs text-church-gold">
-                    📝 Registro disponible
+                {event.capacity && (
+                  <div className="text-xs text-church-blue-dark">
+                    <Users className="h-3 w-3 inline mr-1" />
+                    Capacidad: {event.capacity} personas
                   </div>
                 )}
               </div>
@@ -408,6 +327,12 @@ const EventsManager = () => {
           </Card>
         ))}
       </div>
+
+      {events.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          No hay eventos registrados.
+        </div>
+      )}
     </div>
   );
 };

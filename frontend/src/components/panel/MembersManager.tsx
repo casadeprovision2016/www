@@ -1,36 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Edit, Trash2, User, Phone, Mail, Calendar, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, User, Phone, Mail, Calendar, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { 
+  useMembers, 
+  useCreateMember, 
+  useUpdateMember, 
+  useDeleteMember, 
+  useAttendance, 
+  useCreateAttendance, 
+  useUpdateAttendance,
+  CreateMemberData 
+} from '@/hooks/useMembers';
 
-interface AttendanceRecord {
-  id: string;
-  memberId: string;
-  date: string;
-  serviceType: 'domingo' | 'miercoles' | 'especial';
-  present: boolean;
-  notes?: string;
-}
-
-interface Member {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  birthDate: string;
-  ministry: string;
-  status: 'active' | 'inactive';
-}
+// Using Member and AttendanceRecord interfaces from the hooks
 
 const MembersManager = () => {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  // React Query hooks
+  const { data: members = [], isLoading: membersLoading, error: membersError, refetch: refetchMembers } = useMembers();
+  const { data: attendance = [], isLoading: attendanceLoading, error: attendanceError, refetch: refetchAttendance } = useAttendance();
+  const createMemberMutation = useCreateMember();
+  const updateMemberMutation = useUpdateMember();
+  const deleteMemberMutation = useDeleteMember();
+  const createAttendanceMutation = useCreateAttendance();
+  const updateAttendanceMutation = useUpdateAttendance();
+  
   const [showForm, setShowForm] = useState(false);
-  const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [editingMember, setEditingMember] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('members');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -45,81 +44,45 @@ const MembersManager = () => {
     status: 'active' as 'active' | 'inactive'
   });
 
-  useEffect(() => {
-    const storedMembers = localStorage.getItem('members');
-    const storedAttendance = localStorage.getItem('attendance');
-    
-    if (storedMembers) {
-      setMembers(JSON.parse(storedMembers));
-    } else {
-      const exampleMembers: Member[] = [
-        {
-          id: '1',
-          name: 'María González',
-          email: 'maria@email.com',
-          phone: '(11) 9876-5432',
-          address: 'Av. Principal 123',
-          birthDate: '1985-06-15',
-          ministry: 'Adoración',
-          status: 'active'
-        },
-        {
-          id: '2',
-          name: 'Juan Carlos Silva',
-          email: 'juan@email.com',
-          phone: '(11) 8765-4321',
-          address: 'Calle Secundaria 456',
-          birthDate: '1980-03-22',
-          ministry: 'Jóvenes',
-          status: 'active'
-        }
-      ];
-      setMembers(exampleMembers);
-      localStorage.setItem('members', JSON.stringify(exampleMembers));
-    }
-
-    if (storedAttendance) {
-      setAttendance(JSON.parse(storedAttendance));
-    }
-  }, []);
-
-  const saveMembers = (newMembers: Member[]) => {
-    setMembers(newMembers);
-    localStorage.setItem('members', JSON.stringify(newMembers));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle form submission for members
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingMember) {
-      const updatedMembers = members.map(member => 
-        member.id === editingMember.id 
-          ? { ...editingMember, ...formData }
-          : member
-      );
-      saveMembers(updatedMembers);
-      setEditingMember(null);
-    } else {
-      const newMember: Member = {
-        id: Date.now().toString(),
-        ...formData
-      };
-      saveMembers([...members, newMember]);
-    }
+    const memberData: CreateMemberData = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      address: formData.address,
+      birthDate: formData.birthDate,
+      ministry: formData.ministry,
+      status: formData.status,
+    };
+    
+    try {
+      if (editingMember) {
+        await updateMemberMutation.mutateAsync({ id: editingMember.id, ...memberData });
+        setEditingMember(null);
+      } else {
+        await createMemberMutation.mutateAsync(memberData);
+      }
 
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      address: '',
-      birthDate: '',
-      ministry: '',
-      status: 'active'
-    });
-    setShowForm(false);
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        birthDate: '',
+        ministry: '',
+        status: 'active'
+      });
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error saving member:', error);
+    }
   };
 
-  const handleEdit = (member: Member) => {
+
+  const handleEdit = (member: any) => {
     setEditingMember(member);
     setFormData({
       name: member.name,
@@ -133,41 +96,39 @@ const MembersManager = () => {
     setShowForm(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('¿Estás seguro de que quieres eliminar este miembro?')) {
-      const updatedMembers = members.filter(member => member.id !== id);
-      saveMembers(updatedMembers);
+      try {
+        await deleteMemberMutation.mutateAsync(id);
+      } catch (error) {
+        console.error('Error deleting member:', error);
+      }
     }
   };
 
-  const saveAttendance = (newAttendance: AttendanceRecord[]) => {
-    setAttendance(newAttendance);
-    localStorage.setItem('attendance', JSON.stringify(newAttendance));
-  };
-
-  const handleAttendanceToggle = (memberId: string, present: boolean) => {
+  const handleAttendanceToggle = async (memberId: string, present: boolean) => {
     const existingRecord = attendance.find(
       record => record.memberId === memberId && 
                 record.date === selectedDate && 
                 record.serviceType === selectedServiceType
     );
 
-    if (existingRecord) {
-      const updatedAttendance = attendance.map(record =>
-        record.id === existingRecord.id 
-          ? { ...record, present }
-          : record
-      );
-      saveAttendance(updatedAttendance);
-    } else {
-      const newRecord: AttendanceRecord = {
-        id: Date.now().toString() + memberId,
-        memberId,
-        date: selectedDate,
-        serviceType: selectedServiceType,
-        present
-      };
-      saveAttendance([...attendance, newRecord]);
+    try {
+      if (existingRecord) {
+        await updateAttendanceMutation.mutateAsync({
+          id: existingRecord.id,
+          present
+        });
+      } else {
+        await createAttendanceMutation.mutateAsync({
+          memberId,
+          date: selectedDate,
+          serviceType: selectedServiceType,
+          present
+        });
+      }
+    } catch (error) {
+      console.error('Error updating attendance:', error);
     }
   };
 
@@ -194,6 +155,31 @@ const MembersManager = () => {
     member.ministry.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (membersLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-church-gold" />
+        <span className="ml-2 text-gray-600">Cargando miembros...</span>
+      </div>
+    );
+  }
+
+  if (membersError) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-church-blue-dark">Gestión de Miembros</h2>
+          <Button onClick={() => refetchMembers()} variant="outline">
+            Reintentar
+          </Button>
+        </div>
+        <div className="text-center py-8 text-red-600">
+          Error al cargar miembros: {membersError.message}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -208,6 +194,7 @@ const MembersManager = () => {
           <Button
             onClick={() => setShowForm(true)}
             className="bg-church-gold hover:bg-church-gold-dark text-white whitespace-nowrap"
+            disabled={createMemberMutation.isPending}
           >
             <Plus className="h-4 w-4 mr-2" />
             Nuevo Miembro
@@ -316,7 +303,14 @@ const MembersManager = () => {
               </div>
 
               <div className="flex gap-2">
-                <Button type="submit" className="bg-church-gold hover:bg-church-gold-dark text-white">
+                <Button 
+                  type="submit" 
+                  className="bg-church-gold hover:bg-church-gold-dark text-white"
+                  disabled={createMemberMutation.isPending || updateMemberMutation.isPending}
+                >
+                  {(createMemberMutation.isPending || updateMemberMutation.isPending) && (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  )}
                   {editingMember ? 'Actualizar' : 'Crear'} Miembro
                 </Button>
                 <Button 
@@ -360,6 +354,7 @@ const MembersManager = () => {
                     size="sm"
                     variant="ghost"
                     onClick={() => handleEdit(member)}
+                    disabled={deleteMemberMutation.isPending}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -368,8 +363,13 @@ const MembersManager = () => {
                     variant="ghost"
                     onClick={() => handleDelete(member.id)}
                     className="text-red-600 hover:text-red-800"
+                    disabled={deleteMemberMutation.isPending}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    {deleteMemberMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
                   </Button>
                     </div>
                   </div>

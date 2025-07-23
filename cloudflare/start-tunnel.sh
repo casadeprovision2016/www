@@ -43,11 +43,6 @@ fi
 
 echo "✅ Iniciando túnel Cloudflare..."
 
-# Iniciar o túnel com configuração ou token
-if [ -f "/etc/cloudflared/config.yml" ]; then
-    echo "📁 Usando arquivo de configuração"
-    exec cloudflared tunnel --config /etc/cloudflared/config.yml run
-else
-    echo "🔗 Usando token direto"
-    exec cloudflared tunnel --no-autoupdate run --token "$TUNNEL_TOKEN"
-fi
+# Iniciar o túnel usando TOKEN (método moderno e recomendado)
+echo "🔗 Usando token Cloudflare"
+exec cloudflared tunnel --no-autoupdate run --token "$TUNNEL_TOKEN"

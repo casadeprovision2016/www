@@ -116,31 +116,15 @@ services:
     container_name: cccp-cloudflare-tunnel
     environment:
       - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
-      - TUNNEL_NAME=${CLOUDFLARE_TUNNEL_NAME:-cccp-tunnel}
-      - TUNNEL_UUID=${CLOUDFLARE_TUNNEL_UUID:-}
-      - LOG_LEVEL=${CLOUDFLARE_LOG_LEVEL:-info}
-      - METRICS_PORT=${CLOUDFLARE_METRICS_PORT:-8080}
-    volumes:
-      - ./cloudflare/config.yml:/etc/cloudflared/config.yml:ro
-      - ./cloudflare/start-tunnel.sh:/usr/local/bin/start-tunnel.sh:ro
-      - cloudflare_data:/etc/cloudflared
-    command: /usr/local/bin/start-tunnel.sh
-    depends_on:
-      frontend:
-        condition: service_healthy
-      backend:
-        condition: service_healthy
+      - TZ=Europe/Madrid
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
     networks:
       - cccp-network
     restart: unless-stopped
     profiles:
       - production
-    healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --timeout=5 --spider http://localhost:8080/metrics || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+    cap_add:
+      - NET_ADMIN
     logging:
       driver: "json-file"
       options:

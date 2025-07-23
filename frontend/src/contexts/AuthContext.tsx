@@ -17,6 +17,10 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   loading: boolean;
+  hasRole: (role: string | string[]) => boolean;
+  canAccess: (resource: string) => boolean;
+  isAdmin: boolean;
+  isLeader: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -127,13 +131,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Função para verificar se o usuário tem um ou mais roles específicos
+  const hasRole = (roles: string | string[]): boolean => {
+    if (!user) return false;
+    
+    const roleArray = Array.isArray(roles) ? roles : [roles];
+    return roleArray.includes(user.role);
+  };
+
+  // Função para verificar se o usuário pode acessar um recurso específico
+  const canAccess = (resource: string): boolean => {
+    if (!user) return false;
+
+    // Definir permissões por role
+    const permissions = {
+      admin: ['dashboard', 'events', 'members', 'donations', 'streams', 'ministries', 'visitors', 'pastoral-visits', 'settings'],
+      leader: ['dashboard', 'events', 'members', 'streams', 'ministries', 'visitors', 'pastoral-visits'],
+      member: ['dashboard', 'events'],
+      visitor: ['dashboard']
+    };
+
+    const userPermissions = permissions[user.role] || [];
+    return userPermissions.includes(resource);
+  };
+
+  // Computar propriedades derivadas
+  const isAdmin = user?.role === 'admin';
+  const isLeader = user?.role === 'leader' || user?.role === 'admin';
+
   return (
     <AuthContext.Provider value={{
       user,
       login,
       logout,
       isAuthenticated: !!user,
-      loading
+      loading,
+      hasRole,
+      canAccess,
+      isAdmin,
+      isLeader
     }}>
       {children}
     </AuthContext.Provider>

@@ -1,8 +1,6 @@
 # Configuração do Cloudflare Tunnel para CCCP
 # Arquivo: cloudflare/config.yml
-
-tunnel: cccp-tunnel
-credentials-file: /etc/cloudflared/credentials.json
+# Usando método TOKEN (mais simples e moderno)
 
 # Configurações de entrada (ingress rules)
 ingress:

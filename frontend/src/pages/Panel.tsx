@@ -4,7 +4,8 @@ import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, Calendar, Users, Settings, Home, Video, DollarSign, UserPlus, User } from 'lucide-react';
+import { LogOut, Calendar, Users, Settings, Home, Video, DollarSign, UserPlus, User, Loader2 } from 'lucide-react';
+import { useDashboardStats } from '@/hooks/useDashboard';
 import EventsManager from '@/components/panel/EventsManager';
 import MembersManager from '@/components/panel/MembersManager';
 import MinistriesManager from '@/components/panel/MinistriesManager';
@@ -15,72 +16,111 @@ import PastoralVisitsManager from '@/components/panel/PastoralVisitsManager';
 import BirthdaysList from '@/components/panel/BirthdaysList';
 
 const Panel = () => {
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, canAccess, isAdmin, isLeader } = useAuth();
+  const { data: dashboardStats, isLoading: statsLoading } = useDashboardStats();
   const [activeSection, setActiveSection] = useState('dashboard');
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  const sections = [
-    { id: 'dashboard', name: 'Dashboard', icon: Home },
-    { id: 'events', name: 'Eventos', icon: Calendar },
-    { id: 'streams', name: 'Transmisiones', icon: Video },
-    { id: 'donations', name: 'Donaciones', icon: DollarSign },
-    { id: 'members', name: 'Miembros', icon: Users },
-    { id: 'visitors', name: 'Visitantes', icon: UserPlus },
-    { id: 'pastoral-visits', name: 'Visitas Pastorales', icon: User },
-    { id: 'ministries', name: 'Ministerios', icon: Settings },
+  // Filtrar seções baseado nas permissões do usuário
+  const allSections = [
+    { id: 'dashboard', name: 'Dashboard', icon: Home, resource: 'dashboard' },
+    { id: 'events', name: 'Eventos', icon: Calendar, resource: 'events' },
+    { id: 'streams', name: 'Transmisiones', icon: Video, resource: 'streams' },
+    { id: 'donations', name: 'Donaciones', icon: DollarSign, resource: 'donations' },
+    { id: 'members', name: 'Miembros', icon: Users, resource: 'members' },
+    { id: 'visitors', name: 'Visitantes', icon: UserPlus, resource: 'visitors' },
+    { id: 'pastoral-visits', name: 'Visitas Pastorales', icon: User, resource: 'pastoral-visits' },
+    { id: 'ministries', name: 'Ministerios', icon: Settings, resource: 'ministries' },
   ];
 
+  const sections = allSections.filter(section => canAccess(section.resource));
+
   const renderContent = () => {
+    // Verificar permissão antes de renderizar o componente
+    if (!canAccess(activeSection)) {
+      return (
+        <div className="text-center py-8">
+          <div className="text-red-600 mb-4">
+            <Users className="h-16 w-16 mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-semibold">Acesso Negado</h3>
+            <p className="text-gray-600">Você não tem permissão para acessar esta seção.</p>
+          </div>
+        </div>
+      );
+    }
+
     switch (activeSection) {
       case 'events':
-        return <EventsManager />;
+        return canAccess('events') ? <EventsManager /> : null;
       case 'streams':
-        return <StreamsManager />;
+        return canAccess('streams') ? <StreamsManager /> : null;
       case 'donations':
-        return <DonationsManager />;
+        return canAccess('donations') ? <DonationsManager /> : null;
       case 'members':
-        return <MembersManager />;
+        return canAccess('members') ? <MembersManager /> : null;
       case 'visitors':
-        return <VisitorsManager />;
+        return canAccess('visitors') ? <VisitorsManager /> : null;
       case 'pastoral-visits':
-        return <PastoralVisitsManager />;
+        return canAccess('pastoral-visits') ? <PastoralVisitsManager /> : null;
       case 'ministries':
-        return <MinistriesManager />;
+        return canAccess('ministries') ? <MinistriesManager /> : null;
       default:
         return (
           <div className="space-y-6">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-church-blue-dark">Eventos</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-church-gold">12</p>
-                  <p className="text-gray-600">Eventos este mes</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-church-blue-dark">Miembros</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-church-gold">158</p>
-                  <p className="text-gray-600">Miembros registrados</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-church-blue-dark">Visitantes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-church-gold">24</p>
-                  <p className="text-gray-600">Visitantes este mes</p>
-                </CardContent>
-              </Card>
-            </div>
+            {statsLoading ? (
+              <div className="flex items-center justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-church-gold" />
+                <span className="ml-2 text-gray-600">Cargando estadísticas...</span>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-church-blue-dark">Eventos</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold text-church-gold">
+                      {dashboardStats?.events.thisMonth || 0}
+                    </p>
+                    <p className="text-gray-600">Eventos este mes</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {dashboardStats?.events.upcoming || 0} próximos
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-church-blue-dark">Miembros</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold text-church-gold">
+                      {dashboardStats?.members.total || 0}
+                    </p>
+                    <p className="text-gray-600">Miembros registrados</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {dashboardStats?.members.active || 0} activos
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-church-blue-dark">Visitantes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-2xl font-bold text-church-gold">
+                      {dashboardStats?.visitors.thisMonth || 0}
+                    </p>
+                    <p className="text-gray-600">Visitantes este mes</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {dashboardStats?.visitors.thisWeek || 0} esta semana
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
             <BirthdaysList />
           </div>
         );
@@ -104,9 +144,22 @@ const Panel = () => {
               </h1>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-gray-700">
-                Bienvenido, {user?.name} ({user?.role})
-              </span>
+              <div className="text-right">
+                <span className="text-gray-700 block">
+                  Bienvenido, {user?.name}
+                </span>
+                <span className={`text-xs px-2 py-1 rounded ${
+                  isAdmin ? 'bg-red-100 text-red-800' :
+                  isLeader ? 'bg-blue-100 text-blue-800' :
+                  user?.role === 'member' ? 'bg-green-100 text-green-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {user?.role === 'admin' ? 'Administrador' :
+                   user?.role === 'leader' ? 'Líder' :
+                   user?.role === 'member' ? 'Miembro' :
+                   'Visitante'}
+                </span>
+              </div>
               <Button
                 variant="outline"
                 onClick={logout}

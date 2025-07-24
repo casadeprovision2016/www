@@ -6,23 +6,28 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 export interface DashboardStats {
   events: {
     total: number;
-    thisMonth: number;
-    upcoming: number;
+    active: number;
+    monthly: any;
   };
   members: {
     total: number;
     active: number;
     inactive: number;
+    monthly: any;
   };
   visitors: {
     total: number;
-    thisMonth: number;
-    thisWeek: number;
+    monthly: any;
   };
   donations: {
-    thisMonth: number;
-    lastMonth: number;
-    currency: string;
+    total: number;
+    total_amount: number;
+    monthly: any;
+  };
+  streams: {
+    total: number;
+    active: number;
+    monthly: any;
   };
 }
 
@@ -38,7 +43,7 @@ export interface BirthdayMember {
 // API Functions
 const fetchDashboardStats = async (): Promise<DashboardStats> => {
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_URL}/api/reports/dashboard`, {
+  const response = await fetch(`${API_URL}/api/dashboard/stats`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -50,11 +55,12 @@ const fetchDashboardStats = async (): Promise<DashboardStats> => {
   }
 
   const data = await response.json();
-  return data.success ?data.data.data : {
-    events: { total: 0, thisMonth: 0, upcoming: 0 },
-    members: { total: 0, active: 0, inactive: 0 },
-    visitors: { total: 0, thisMonth: 0, thisWeek: 0 },
-    donations: { thisMonth: 0, lastMonth: 0, currency: 'EUR' },
+  return data.success ? data.data : {
+    events: { total: 0, active: 0, monthly: {} },
+    members: { total: 0, active: 0, inactive: 0, monthly: {} },
+    visitors: { total: 0, monthly: {} },
+    donations: { total: 0, total_amount: 0, monthly: {} },
+    streams: { total: 0, active: 0, monthly: {} },
   };
 };
 
@@ -72,7 +78,7 @@ const fetchUpcomingBirthdays = async (): Promise<BirthdayMember[]> => {
   }
 
   const data = await response.json();
-  return data.success ?data.data.data : [];
+  return data.success ? data.data : [];
 };
 
 // Custom Hooks

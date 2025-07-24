@@ -83,11 +83,11 @@ const Panel = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-2xl font-bold text-church-gold">
-                      {dashboardStats?.events.thisMonth || 0}
+                      {dashboardStats?.events.total || 0}
                     </p>
-                    <p className="text-gray-600">Eventos este mes</p>
+                    <p className="text-gray-600">Total de eventos</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {dashboardStats?.events.upcoming || 0} próximos
+                      {dashboardStats?.events.active || 0} próximos
                     </p>
                   </CardContent>
                 </Card>

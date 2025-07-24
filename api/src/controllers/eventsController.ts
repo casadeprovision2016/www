@@ -4,9 +4,29 @@ import { AuthenticatedRequest, CreateEventRequest, EventQueryParams, PaginatedRe
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 import { cacheService } from '../services/cacheService';
 
+// Helper function to map database fields to frontend format
+const mapEventToFrontend = (event: any) => {
+  if (!event) return event;
+  
+  return {
+    id: event.id,
+    title: event.titulo,
+    description: event.descricao,
+    date: event.data_inicio ? new Date(event.data_inicio).toISOString().split('T')[0] : '',
+    time: event.data_inicio ? new Date(event.data_inicio).toTimeString().substring(0, 5) : '',
+    location: event.local,
+    category: 'culto', // Valor padrão já que não existe na tabela
+    capacity: event.max_participantes,
+    status: 'scheduled', // Valor padrão já que não existe na tabela
+    created_by: event.created_by,
+    created_at: event.created_at,
+    updated_at: event.updated_at
+  };
+};
+
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export const getEvents = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
@@ -14,7 +34,7 @@ export const getEvents = asyncHandler(async (req: AuthenticatedRequest, res: Res
   
   let query = supabase
     .from('events')
-    .select('*, created_by:users!events_created_by_fkey(name, email)', { count: 'exact' });
+    .select('*', { count: 'exact' });
 
   // Filtros
   if (upcoming) {
@@ -48,8 +68,10 @@ export const getEvents = asyncHandler(async (req: AuthenticatedRequest, res: Res
     throw new AppError('Erro ao buscar eventos', 500);
   }
 
+  const mappedData = (data || []).map(mapEventToFrontend);
+
   const response: PaginatedResponse<any> = {
-    data: data || [],
+    data: mappedData,
     total: count || 0,
     page: parseInt(page),
     limit: parseInt(limit),
@@ -67,16 +89,7 @@ export const getEventById = asyncHandler(async (req: AuthenticatedRequest, res: 
 
   const { data, error } = await supabase
     .from('events')
-    .select(`
-      *,
-      created_by:users!events_created_by_fkey(name, email),
-      registrations:event_registrations(
-        id,
-        status,
-        registered_at,
-        user:users(name, email)
-      )
-    `)
+    .select('*')
     .eq('id', id)
     .single();
 
@@ -86,20 +99,27 @@ export const getEventById = asyncHandler(async (req: AuthenticatedRequest, res: 
 
   res.json({
     success: true,
-    data
+    data: mapEventToFrontend(data)
   });
 });
 
 export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const eventData: CreateEventRequest = req.body;
+  const { title, description, date, time, location, category, capacity } = req.body;
   const userId = req.user.id;
+
+  // Mapear campos do frontend para a estrutura da base de dados
+  const eventData = {
+    titulo: title,
+    descricao: description,
+    data_inicio: new Date(`${date}T${time}:00Z`).toISOString(),
+    local: location,
+    max_participantes: capacity,
+    created_by: userId
+  };
 
   const { data, error } = await supabase
     .from('events')
-    .insert({
-      ...eventData,
-      created_by: userId
-    })
+    .insert(eventData)
     .select()
     .single();
 
@@ -113,14 +133,14 @@ export const createEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
 
   res.status(201).json({
     success: true,
-    data,
+    data: mapEventToFrontend(data),
     message: 'Evento criado com sucesso'
   });
 });
 
 export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
-  const updateData = req.body;
+  const { title, description, date, time, location, category, capacity } = req.body;
   const userId = req.user.id;
   const userRole = req.user.role;
 
@@ -140,6 +160,15 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
     throw new AppError('Sem permissão para editar este evento', 403);
   }
 
+  // Mapear campos do frontend para a estrutura da base de dados
+  const updateData: any = {};
+  if (title) updateData.titulo = title;
+  if (description) updateData.descricao = description;
+  if (date && time) updateData.data_inicio = new Date(`${date}T${time}:00Z`).toISOString();
+  if (location) updateData.local = location;
+  if (capacity) updateData.max_participantes = capacity;
+  // Ignorar category e status pois não existem na tabela atual
+
   const { data, error } = await supabase
     .from('events')
     .update(updateData)
@@ -157,7 +186,7 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
 
   res.json({
     success: true,
-    data,
+    data: mapEventToFrontend(data),
     message: 'Evento atualizado com sucesso'
   });
 });

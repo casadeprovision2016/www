@@ -1,116 +1,104 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, Users, Calendar } from 'lucide-react';
-
-interface Ministry {
-  id: string;
-  name: string;
-  description: string;
-  leader: string;
-  members: string[];
-  schedule: string;
-  status: 'active' | 'inactive';
-}
+import { Plus, Edit, Trash2, Users, Calendar, Loader2 } from 'lucide-react';
+import { useMinistries, useCreateMinistry, useUpdateMinistry, useDeleteMinistry } from '@/hooks/useMinistries';
 
 const MinistriesManager = () => {
-  const [ministries, setMinistries] = useState<Ministry[]>([]);
+  const { data: ministries, isLoading, error } = useMinistries();
+  const createMinistryMutation = useCreateMinistry();
+  const updateMinistryMutation = useUpdateMinistry();
+  const deleteMinistryMutation = useDeleteMinistry();
+  
   const [showForm, setShowForm] = useState(false);
-  const [editingMinistry, setEditingMinistry] = useState<Ministry | null>(null);
+  const [editingMinistry, setEditingMinistry] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    leader: '',
-    schedule: '',
+    leaderId: '',
+    meetingDay: '',
+    meetingTime: '',
+    meetingLocation: '',
     status: 'active' as 'active' | 'inactive'
   });
-
-  useEffect(() => {
-    const storedMinistries = localStorage.getItem('ministries');
-    if (storedMinistries) {
-      setMinistries(JSON.parse(storedMinistries));
-    } else {
-      const exampleMinistries: Ministry[] = [
-        {
-          id: '1',
-          name: 'Ministerio de Adoración',
-          description: 'Responsable de dirigir la adoración en los cultos y eventos especiales',
-          leader: 'María González',
-          members: ['María González', 'Juan Pérez', 'Ana López'],
-          schedule: 'Domingos 8:30 AM, Ensayos Sábados 6:00 PM',
-          status: 'active'
-        },
-        {
-          id: '2',
-          name: 'Ministerio de Jóvenes',
-          description: 'Enfocado en el crecimiento espiritual y social de los jóvenes',
-          leader: 'Carlos Rivera',
-          members: ['Carlos Rivera', 'Sofía Martín', 'Diego Torres'],
-          schedule: 'Viernes 7:00 PM',
-          status: 'active'
-        }
-      ];
-      setMinistries(exampleMinistries);
-      localStorage.setItem('ministries', JSON.stringify(exampleMinistries));
-    }
-  }, []);
-
-  const saveMinistries = (newMinistries: Ministry[]) => {
-    setMinistries(newMinistries);
-    localStorage.setItem('ministries', JSON.stringify(newMinistries));
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (editingMinistry) {
-      const updatedMinistries = ministries.map(ministry => 
-        ministry.id === editingMinistry.id 
-          ? { ...editingMinistry, ...formData, members: editingMinistry.members }
-          : ministry
-      );
-      saveMinistries(updatedMinistries);
-      setEditingMinistry(null);
+      updateMinistryMutation.mutate({
+        id: editingMinistry.id,
+        ...formData
+      }, {
+        onSuccess: () => {
+          setEditingMinistry(null);
+          setShowForm(false);
+          resetForm();
+        }
+      });
     } else {
-      const newMinistry: Ministry = {
-        id: Date.now().toString(),
-        ...formData,
-        members: []
-      };
-      saveMinistries([...ministries, newMinistry]);
+      createMinistryMutation.mutate(formData, {
+        onSuccess: () => {
+          setShowForm(false);
+          resetForm();
+        }
+      });
     }
+  };
 
+  const resetForm = () => {
     setFormData({
       name: '',
       description: '',
-      leader: '',
-      schedule: '',
+      leaderId: '',
+      meetingDay: '',
+      meetingTime: '',
+      meetingLocation: '',
       status: 'active'
     });
-    setShowForm(false);
   };
 
-  const handleEdit = (ministry: Ministry) => {
+  const handleEdit = (ministry: any) => {
     setEditingMinistry(ministry);
     setFormData({
       name: ministry.name,
       description: ministry.description,
-      leader: ministry.leader,
-      schedule: ministry.schedule,
-      status: ministry.status
+      leaderId: ministry.leader_id || '',
+      meetingDay: ministry.meetingDay || '',
+      meetingTime: ministry.meetingTime || '',
+      meetingLocation: ministry.meetingLocation || '',
+      status: ministry.active ? 'active' : 'inactive'
     });
     setShowForm(true);
   };
 
   const handleDelete = (id: string) => {
     if (confirm('¿Estás seguro de que quieres eliminar este ministerio?')) {
-      const updatedMinistries = ministries.filter(ministry => ministry.id !== id);
-      saveMinistries(updatedMinistries);
+      deleteMinistryMutation.mutate(id);
     }
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Cargando ministerios...</span>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600">
+        <p>Error al cargar ministerios: {error.message}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -145,12 +133,12 @@ const MinistriesManager = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="leader">Líder</Label>
+                  <Label htmlFor="meetingLocation">Lugar de Reunión</Label>
                   <Input
-                    id="leader"
-                    value={formData.leader}
-                    onChange={(e) => setFormData({...formData, leader: e.target.value})}
-                    required
+                    id="meetingLocation"
+                    value={formData.meetingLocation}
+                    onChange={(e) => setFormData({...formData, meetingLocation: e.target.value})}
+                    placeholder="ej: Sala Principal"
                   />
                 </div>
               </div>
@@ -165,14 +153,32 @@ const MinistriesManager = () => {
                 />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="schedule">Horario</Label>
+                  <Label htmlFor="meetingDay">Día de Reunión</Label>
+                  <select
+                    id="meetingDay"
+                    value={formData.meetingDay}
+                    onChange={(e) => setFormData({...formData, meetingDay: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="">Seleccionar día</option>
+                    <option value="lunes">Lunes</option>
+                    <option value="martes">Martes</option>
+                    <option value="miércoles">Miércoles</option>
+                    <option value="jueves">Jueves</option>
+                    <option value="viernes">Viernes</option>
+                    <option value="sábado">Sábado</option>
+                    <option value="domingo">Domingo</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="meetingTime">Hora</Label>
                   <Input
-                    id="schedule"
-                    value={formData.schedule}
-                    onChange={(e) => setFormData({...formData, schedule: e.target.value})}
-                    placeholder="ej: Domingos 9:00 AM"
+                    id="meetingTime"
+                    type="time"
+                    value={formData.meetingTime}
+                    onChange={(e) => setFormData({...formData, meetingTime: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
@@ -199,13 +205,7 @@ const MinistriesManager = () => {
                   onClick={() => {
                     setShowForm(false);
                     setEditingMinistry(null);
-                    setFormData({
-                      name: '',
-                      description: '',
-                      leader: '',
-                      schedule: '',
-                      status: 'active'
-                    });
+                    resetForm();
                   }}
                 >
                   Cancelar
@@ -224,9 +224,9 @@ const MinistriesManager = () => {
                 <div>
                   <CardTitle className="text-lg">{ministry.name}</CardTitle>
                   <div className={`inline-block px-2 py-1 rounded text-xs text-white mt-2 ${
-                    ministry.status === 'active' ? 'bg-green-600' : 'bg-gray-600'
+                    ministry.active ? 'bg-green-600' : 'bg-gray-600'
                   }`}>
-                    {ministry.status === 'active' ? 'Activo' : 'Inactivo'}
+                    {ministry.active ? 'Activo' : 'Inactivo'}
                   </div>
                 </div>
                 <div className="flex gap-1">
@@ -252,26 +252,27 @@ const MinistriesManager = () => {
               <p className="text-gray-600 text-sm">{ministry.description}</p>
               
               <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <Users className="h-4 w-4 text-church-gold" />
-                  <span><strong>Líder:</strong> {ministry.leader}</span>
-                </div>
+                {ministry.leader && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Users className="h-4 w-4 text-church-gold" />
+                    <span><strong>Líder:</strong> {ministry.leader.name}</span>
+                  </div>
+                )}
                 
-                {ministry.schedule && (
+                {(ministry.meetingDay || ministry.meetingTime || ministry.meetingLocation) && (
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4 text-church-gold" />
-                    <span>{ministry.schedule}</span>
+                    <span>
+                      {ministry.meetingDay && ministry.meetingTime 
+                        ? `${ministry.meetingDay}s ${ministry.meetingTime}`
+                        : ministry.meetingDay || ministry.meetingTime || ''}
+                      {ministry.meetingLocation && ` - ${ministry.meetingLocation}`}
+                    </span>
                   </div>
                 )}
                 
                 <div className="text-sm text-gray-600">
-                  <strong>Miembros:</strong> {ministry.members.length}
-                  {ministry.members.length > 0 && (
-                    <div className="mt-1 text-xs">
-                      {ministry.members.slice(0, 3).join(', ')}
-                      {ministry.members.length > 3 && ` y ${ministry.members.length - 3} más`}
-                    </div>
-                  )}
+                  <strong>Miembros:</strong> {ministry.memberCount || 0}
                 </div>
               </div>
             </CardContent>

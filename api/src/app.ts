@@ -21,10 +21,13 @@ import reportsRoutes from './routes/reports';
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Trust proxy for Cloudflare and rate limiting
+app.set('trust proxy', true);
+
 // Verificar variáveis de ambiente obrigatórias
 const requiredEnvVars = [
   'SUPABASE_URL',
-  'SUPABASE_SERVICE_KEY',
+  'SUPABASE_SERVICE_ROLE_KEY',
   'JWT_SECRET'
 ];
 
@@ -84,27 +87,34 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Request logging
 app.use(requestLogger);
 
-// Rate limiting geral
+// Rate limiting geral (DESABILITADO PARA DESENVOLVIMENTO)
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máximo 100 requests por IP
+  max: 10000, // limite muito alto para desenvolvimento
   message: {
     success: false,
     error: 'Muitas requisições. Tente novamente em 15 minutos.'
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting completamente em desenvolvimento
+    return true; // Sempre pular rate limiting
+  }
 });
 
-app.use(generalLimiter);
+// app.use(generalLimiter); // DESABILITADO PARA DESENVOLVIMENTO
 
 // Rate limiting específico para autenticação
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5, // Apenas 5 tentativas de login por 15min
+  max: 20, // 20 tentativas de login por 15min (mais permissivo)
   message: {
     success: false,
     error: 'Muitas tentativas de login. Tente novamente em 15 minutos.'
+  },
+  skip: (req) => {
+    return req.hostname === 'localhost' || req.hostname === '127.0.0.1';
   }
 });
 
@@ -124,7 +134,7 @@ app.get('/health', async (req, res) => {
     // Verificar conexão com Supabase
     const supabase = createClient(
       process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
     
     const { error: dbError } = await supabase

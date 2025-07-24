@@ -7,7 +7,7 @@ import { uploadService } from '../services/uploadService';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export const getDonations = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

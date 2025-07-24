@@ -6,7 +6,7 @@ import { cacheService } from '../services/cacheService';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export const getPastoralVisits = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

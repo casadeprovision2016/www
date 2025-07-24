@@ -10,7 +10,7 @@ async function startWorker() {
     // Verificar variáveis de ambiente necessárias
     const requiredEnvVars = [
       'SUPABASE_URL',
-      'SUPABASE_SERVICE_KEY',
+      'SUPABASE_SERVICE_ROLE_KEY',
       'REDIS_URL'
     ];
 

@@ -56,21 +56,23 @@ const sanitizeObject = (obj: any): any => {
 export const schemas = {
   // Eventos
   createEvent: z.object({
-    titulo: z.string().min(1, 'Título é obrigatório').max(200, 'Título muito longo'),
-    descricao: z.string().max(2000, 'Descrição muito longa').optional(),
-    data_inicio: z.string().datetime('Data de início inválida'),
-    data_fim: z.string().datetime('Data de fim inválida').optional(),
-    local: z.string().max(200, 'Local muito longo').optional(),
-    max_participantes: z.number().int().positive().max(1000).optional()
+    title: z.string().min(1, 'Título é obrigatório').max(200, 'Título muito longo'),
+    description: z.string().max(2000, 'Descrição muito longa').optional(),
+    date: z.string().min(1, 'Data é obrigatória'),
+    time: z.string().min(1, 'Hora é obrigatória'),
+    location: z.string().max(200, 'Local muito longo').optional(),
+    category: z.string().optional(), // Opcional pois não existe na tabela
+    capacity: z.number().int().positive().max(1000).optional()
   }),
 
   updateEvent: z.object({
-    titulo: z.string().min(1).max(200).optional(),
-    descricao: z.string().max(2000).optional(),
-    data_inicio: z.string().datetime().optional(),
-    data_fim: z.string().datetime().optional(),
-    local: z.string().max(200).optional(),
-    max_participantes: z.number().int().positive().max(1000).optional()
+    title: z.string().min(1).max(200).optional(),
+    description: z.string().max(2000).optional(),
+    date: z.string().min(1).optional(),
+    time: z.string().min(1).optional(),
+    location: z.string().max(200).optional(),
+    category: z.string().optional(),
+    capacity: z.number().int().positive().max(1000).optional()
   }),
 
   // Membros

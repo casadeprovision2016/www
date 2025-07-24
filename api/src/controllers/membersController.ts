@@ -7,7 +7,7 @@ import { startOfWeek, endOfWeek, format } from 'date-fns';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export const getMembers = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

@@ -39,6 +39,7 @@ router.post('/',
 // Atualizar transmissão (leader ou admin)
 router.put('/:id',
   requireLeaderOrAdmin,
+  validateAndSanitize(schemas.updateStream),
   updateStream
 );
 

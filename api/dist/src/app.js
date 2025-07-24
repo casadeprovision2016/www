@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+require("dotenv/config");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
@@ -21,6 +22,8 @@ const streams_1 = __importDefault(require("./routes/streams"));
 const pastoralVisits_1 = __importDefault(require("./routes/pastoralVisits"));
 const contributions_1 = __importDefault(require("./routes/contributions"));
 const reports_1 = __importDefault(require("./routes/reports"));
+const auth_2 = require("./middleware/auth");
+const reportsController_1 = require("./controllers/reportsController");
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 4000;
 // Trust proxy for Cloudflare and rate limiting
@@ -158,10 +161,8 @@ app.use('/api/ministries', ministries_1.default);
 app.use('/api/streams', streams_1.default);
 app.use('/api/pastoral-visits', pastoralVisits_1.default);
 app.use('/api/contributions', contributions_1.default);
-// Temporary redirect for old dashboard stats endpoint (backward compatibility)
-app.get('/api/dashboard/stats', (req, res) => {
-    res.redirect(301, '/api/reports/dashboard');
-});
+// Temporary backward compatibility route for old dashboard stats endpoint
+app.get('/api/dashboard/stats', auth_2.authenticateToken, auth_2.requireMemberOrAbove, reportsController_1.getDashboardStats);
 app.use('/api/reports', reports_1.default);
 // Upload endpoints com rate limiting
 app.use('/api/upload', uploadLimiter);

@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Edit, Trash2, Video, ExternalLink, Loader2 } from 'lucide-react';
 import { useStreams, useCreateStream, useUpdateStream, useDeleteStream } from '@/hooks/useStreams';
+import { useDeleteConfirmation } from '@/components/ui/confirmation-dialog';
 
 const StreamsManager = () => {
-  const { data: streams = [], isLoading, error } = useStreams();
+  const { data: streams = [], isLoading, error, refetch } = useStreams();
   const createStreamMutation = useCreateStream();
   const updateStreamMutation = useUpdateStream();
   const deleteStreamMutation = useDeleteStream();
@@ -24,6 +25,8 @@ const StreamsManager = () => {
     platform: 'youtube' as 'youtube' | 'facebook' | 'instagram' | 'zoom' | 'custom'
   });
 
+  const { confirm } = useDeleteConfirmation();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -36,6 +39,7 @@ const StreamsManager = () => {
           setEditingStream(null);
           setShowForm(false);
           resetForm();
+          refetch(); // Adicionado para atualizar a lista
         }
       });
     } else {
@@ -43,6 +47,7 @@ const StreamsManager = () => {
         onSuccess: () => {
           setShowForm(false);
           resetForm();
+          refetch(); // Adicionado para atualizar a lista
         }
       });
     }
@@ -72,8 +77,9 @@ const StreamsManager = () => {
     setShowForm(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar esta transmisión?')) {
+  const handleDelete = async (id: string) => {
+    const confirmed = await confirm('¿Estás seguro de que quieres eliminar esta transmisión?');
+    if (confirmed) {
       deleteStreamMutation.mutate(id);
     }
   };

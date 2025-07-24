@@ -15,6 +15,7 @@ import {
   useUpdateAttendance,
   CreateMemberData 
 } from '@/hooks/useMembers';
+import { useDeleteConfirmation } from '@/components/ui/confirmation-dialog';
 
 // Using Member and AttendanceRecord interfaces from the hooks
 
@@ -43,6 +44,8 @@ const MembersManager = () => {
     ministry: '',
     status: 'active' as 'active' | 'inactive'
   });
+
+  const { confirm } = useDeleteConfirmation();
 
   // Handle form submission for members
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,7 +100,8 @@ const MembersManager = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este miembro?')) {
+    const confirmed = await confirm('¿Estás seguro de que quieres eliminar este miembro?');
+    if (confirmed) {
       try {
         await deleteMemberMutation.mutateAsync(id);
       } catch (error) {
@@ -208,7 +212,7 @@ const MembersManager = () => {
           <TabsTrigger value="attendance">Control de Asistencia</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="members" className="space-y-6">
+        <TabsContent value="members" className="space-y-6" data-testid="members-tab-content">
           {showForm && (
         <Card>
           <CardHeader>
@@ -342,7 +346,7 @@ const MembersManager = () => {
             {filteredMembers.map((member) => {
               const stats = getAttendanceStats(member.id);
               return (
-                <Card key={member.id}>
+                <Card key={member.id} data-testid="member-card">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <div className="flex items-center gap-2">
@@ -461,7 +465,7 @@ const MembersManager = () => {
                     const isPresent = attendanceRecord?.present || false;
                     
                     return (
-                      <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50">
+                      <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg bg-gray-50" data-testid={`attendance-row-${member.id}`}>
                         <div className="flex items-center gap-3">
                           <User className="h-5 w-5 text-church-gold" />
                           <div>

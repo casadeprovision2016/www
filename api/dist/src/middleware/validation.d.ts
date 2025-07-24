@@ -104,23 +104,54 @@ export declare const schemas: {
         data_doacao?: string;
     }>;
     createStream: z.ZodObject<{
-        titulo: z.ZodString;
-        descricao: z.ZodOptional<z.ZodString>;
-        url_stream: z.ZodString;
-        data_inicio: z.ZodString;
-        data_fim: z.ZodOptional<z.ZodString>;
+        title: z.ZodString;
+        description: z.ZodOptional<z.ZodString>;
+        streamUrl: z.ZodString;
+        startDate: z.ZodString;
+        endDate: z.ZodNullable<z.ZodOptional<z.ZodString>>;
+        status: z.ZodOptional<z.ZodEnum<["agendado", "ao_vivo", "finalizado", "cancelado"]>>;
+        public: z.ZodOptional<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
-        descricao?: string;
-        titulo?: string;
-        url_stream?: string;
-        data_inicio?: string;
-        data_fim?: string;
+        status?: "agendado" | "ao_vivo" | "finalizado" | "cancelado";
+        title?: string;
+        description?: string;
+        streamUrl?: string;
+        startDate?: string;
+        endDate?: string;
+        public?: boolean;
     }, {
-        descricao?: string;
-        titulo?: string;
-        url_stream?: string;
-        data_inicio?: string;
-        data_fim?: string;
+        status?: "agendado" | "ao_vivo" | "finalizado" | "cancelado";
+        title?: string;
+        description?: string;
+        streamUrl?: string;
+        startDate?: string;
+        endDate?: string;
+        public?: boolean;
+    }>;
+    updateStream: z.ZodObject<{
+        title: z.ZodOptional<z.ZodString>;
+        description: z.ZodOptional<z.ZodString>;
+        streamUrl: z.ZodOptional<z.ZodString>;
+        startDate: z.ZodOptional<z.ZodString>;
+        endDate: z.ZodOptional<z.ZodString>;
+        status: z.ZodOptional<z.ZodEnum<["agendado", "ao_vivo", "finalizado", "cancelado"]>>;
+        public: z.ZodOptional<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        status?: "agendado" | "ao_vivo" | "finalizado" | "cancelado";
+        title?: string;
+        description?: string;
+        streamUrl?: string;
+        startDate?: string;
+        endDate?: string;
+        public?: boolean;
+    }, {
+        status?: "agendado" | "ao_vivo" | "finalizado" | "cancelado";
+        title?: string;
+        description?: string;
+        streamUrl?: string;
+        startDate?: string;
+        endDate?: string;
+        public?: boolean;
     }>;
     createMinistry: z.ZodObject<{
         name: z.ZodString;

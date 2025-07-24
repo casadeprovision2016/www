@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDonationsByUser = exports.exportDonations = exports.getDonationStats = exports.uploadReceipt = exports.deleteDonation = exports.updateDonation = exports.createDonation = exports.getDonationById = exports.getDonations = void 0;
+exports.updateDonationInfo = exports.getDonationInfo = exports.getDonationsByUser = exports.exportDonations = exports.getDonationStats = exports.uploadReceipt = exports.deleteDonation = exports.updateDonation = exports.createDonation = exports.getDonationById = exports.getDonations = void 0;
 const supabase_js_1 = require("@supabase/supabase-js");
 const errorHandler_1 = require("../middleware/errorHandler");
 const cacheService_1 = require("../services/cacheService");
@@ -319,6 +319,75 @@ exports.getDonationsByUser = (0, errorHandler_1.asyncHandler)(async (req, res) =
     res.json({
         success: true,
         data: response
+    });
+});
+exports.getDonationInfo = (0, errorHandler_1.asyncHandler)(async (req, res) => {
+    const cacheKey = 'donations:info';
+    const cached = await cacheService_1.cacheService.get(cacheKey);
+    if (cached) {
+        return res.json({
+            success: true,
+            data: cached
+        });
+    }
+    // Buscar informações de doação na tabela organization ou criar dados padrão
+    const { data, error } = await supabase
+        .from('organization')
+        .select('donation_info')
+        .single();
+    if (error || !data?.donation_info) {
+        // Retornar dados padrão se não existir configuração
+        const defaultInfo = {
+            id: '1',
+            iban: 'ES1021001419020200597614',
+            bic: 'CAIXESBBXXX',
+            titular: 'Centro Cristiano Casa de Provisión',
+            bizum: 'Em construção',
+            verse: '"Cada uno dé como propuso en su corazón: no con tristeza, ni por necesidad, porque Dios ama al dador alegre." — 2 Corintios 9:7',
+            additionalMethods: '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+        };
+        await cacheService_1.cacheService.set(cacheKey, defaultInfo, 3600); // 1 hora
+        return res.json({
+            success: true,
+            data: defaultInfo
+        });
+    }
+    await cacheService_1.cacheService.set(cacheKey, data.donation_info, 3600); // 1 hora
+    res.json({
+        success: true,
+        data: data.donation_info
+    });
+});
+exports.updateDonationInfo = (0, errorHandler_1.asyncHandler)(async (req, res) => {
+    const { iban, bic, titular, bizum, verse, additionalMethods } = req.body;
+    const donationInfo = {
+        id: '1',
+        iban,
+        bic,
+        titular,
+        bizum,
+        verse,
+        additionalMethods,
+        updated_at: new Date().toISOString(),
+    };
+    // Atualizar na tabela organization
+    const { error } = await supabase
+        .from('organization')
+        .upsert({
+        id: 1,
+        donation_info: donationInfo,
+        updated_at: new Date().toISOString()
+    });
+    if (error) {
+        throw new errorHandler_1.AppError('Erro ao atualizar informações de doação', 500);
+    }
+    // Invalidar cache
+    await cacheService_1.cacheService.del('donations:info');
+    res.json({
+        success: true,
+        data: donationInfo
     });
 });
 //# sourceMappingURL=donationsController.js.map

@@ -30,6 +30,8 @@ const EventsManager = () => {
     capacity: undefined as number | undefined,
   });
 
+  const { confirm } = useDeleteConfirmation();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -85,7 +87,8 @@ const EventsManager = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este evento?')) {
+    const confirmed = await confirm('¿Estás seguro de que quieres eliminar este evento?');
+    if (confirmed) {
       try {
         await deleteEventMutation.mutateAsync(id);
       } catch (error) {

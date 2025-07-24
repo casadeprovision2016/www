@@ -97,11 +97,22 @@ exports.schemas = {
     }),
     // Streams
     createStream: zod_1.z.object({
-        titulo: zod_1.z.string().min(1, 'Título é obrigatório').max(200),
-        descricao: zod_1.z.string().max(1000).optional(),
-        url_stream: zod_1.z.string().url('URL da stream inválida'),
-        data_inicio: zod_1.z.string().datetime('Data de início inválida'),
-        data_fim: zod_1.z.string().datetime('Data de fim inválida').optional()
+        title: zod_1.z.string().min(1, 'Título é obrigatório').max(200),
+        description: zod_1.z.string().max(1000).optional(),
+        streamUrl: zod_1.z.string().url('URL da stream inválida'),
+        startDate: zod_1.z.string().datetime('Data de início inválida'),
+        endDate: zod_1.z.string().datetime('Data de fim inválida').optional().nullable(),
+        status: zod_1.z.enum(['agendado', 'ao_vivo', 'finalizado', 'cancelado']).optional(),
+        public: zod_1.z.boolean().optional(),
+    }),
+    updateStream: zod_1.z.object({
+        title: zod_1.z.string().min(1).max(200).optional(),
+        description: zod_1.z.string().max(1000).optional(),
+        streamUrl: zod_1.z.string().url('URL da stream inválida').optional(),
+        startDate: zod_1.z.string().datetime('Data de início inválida').optional(),
+        endDate: zod_1.z.string().datetime('Data de fim inválida').optional(),
+        status: zod_1.z.enum(['agendado', 'ao_vivo', 'finalizado', 'cancelado']).optional(),
+        public: zod_1.z.boolean().optional(),
     }),
     // Ministérios
     createMinistry: zod_1.z.object({

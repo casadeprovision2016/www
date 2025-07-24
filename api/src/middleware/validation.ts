@@ -101,11 +101,23 @@ export const schemas = {
 
   // Streams
   createStream: z.object({
-    titulo: z.string().min(1, 'Título é obrigatório').max(200),
-    descricao: z.string().max(1000).optional(),
-    url_stream: z.string().url('URL da stream inválida'),
-    data_inicio: z.string().datetime('Data de início inválida'),
-    data_fim: z.string().datetime('Data de fim inválida').optional()
+    title: z.string().min(1, 'Título é obrigatório').max(200),
+    description: z.string().max(1000).optional(),
+    streamUrl: z.string().url('URL da stream inválida'),
+    startDate: z.string().datetime('Data de início inválida'),
+    endDate: z.string().datetime('Data de fim inválida').optional().nullable(),
+    status: z.enum(['agendado', 'ao_vivo', 'finalizado', 'cancelado']).optional(),
+    public: z.boolean().optional(),
+  }),
+
+  updateStream: z.object({
+    title: z.string().min(1).max(200).optional(),
+    description: z.string().max(1000).optional(),
+    streamUrl: z.string().url('URL da stream inválida').optional(),
+    startDate: z.string().datetime('Data de início inválida').optional(),
+    endDate: z.string().datetime('Data de fim inválida').optional(),
+    status: z.enum(['agendado', 'ao_vivo', 'finalizado', 'cancelado']).optional(),
+    public: z.boolean().optional(),
   }),
 
   // Ministérios
@@ -113,6 +125,33 @@ export const schemas = {
     name: z.string().min(1, 'Nome é obrigatório').max(100),
     descricao: z.string().max(1000).optional(),
     lider_id: z.string().uuid('ID do líder inválido')
+  }),
+
+  // Visitantes
+  createVisitor: z.object({
+    name: z.string().min(1, 'Nome é obrigatório').max(100),
+    email: z.string().email('Email inválido').optional(),
+    phone: z.string().max(20).optional(),
+    address: z.string().max(200).optional(),
+    visitDate: z.string().datetime('Data da visita inválida'),
+    source: z.enum(['invitation', 'social_media', 'walk_in', 'website', 'other']), // Adicione as opções de fonte
+    notes: z.string().max(1000).optional(),
+    followUpStatus: z.enum(['pending', 'contacted', 'scheduled', 'completed', 'no_interest']).optional(),
+    followUpDate: z.string().datetime().optional(),
+    interestedInMembership: z.boolean().optional(),
+  }),
+
+  updateVisitor: z.object({
+    name: z.string().min(1, 'Nome é obrigatório').max(100).optional(),
+    email: z.string().email('Email inválido').optional(),
+    phone: z.string().max(20).optional(),
+    address: z.string().max(200).optional(),
+    visitDate: z.string().datetime('Data da visita inválida').optional(),
+    source: z.enum(['invitation', 'social_media', 'walk_in', 'website', 'other']).optional(),
+    notes: z.string().max(1000).optional(),
+    followUpStatus: z.enum(['pending', 'contacted', 'scheduled', 'completed', 'no_interest']).optional(),
+    followUpDate: z.string().datetime().optional(),
+    interestedInMembership: z.boolean().optional(),
   }),
 
   // Visitas Pastorais

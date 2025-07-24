@@ -31,10 +31,18 @@ export interface CreateVisitorData {
   interestedInMembership: boolean;
 }
 
-export interface UpdateFollowUpData {
-  followUpStatus: Visitor['followUpStatus'];
-  followUpDate?: string;
+export interface UpdateVisitorData {
+  id: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  visitDate?: string;
+  source?: 'invitation' | 'social_media' | 'walk_in' | 'website' | 'other';
   notes?: string;
+  followUpStatus?: 'pending' | 'contacted' | 'scheduled' | 'completed' | 'no_interest';
+  followUpDate?: string;
+  interestedInMembership?: boolean;
 }
 
 // API Functions
@@ -52,7 +60,7 @@ const fetchVisitors = async (): Promise<Visitor[]> => {
   }
 
   const data = await response.json();
-  return data.success ? data.data.data : [];
+  return data.success ? data.data : [];
 };
 
 const createVisitor = async (visitorData: CreateVisitorData): Promise<Visitor> => {
@@ -74,7 +82,7 @@ const createVisitor = async (visitorData: CreateVisitorData): Promise<Visitor> =
   return data.data;
 };
 
-const updateVisitor = async ({ id, ...visitorData }: { id: string } & Partial<CreateVisitorData>): Promise<Visitor> => {
+const updateVisitor = async ({ id, ...visitorData }: UpdateVisitorData): Promise<Visitor> => {
   const token = localStorage.getItem('auth_token');
   const response = await fetch(`${API_URL}/api/visitors/${id}`, {
     method: 'PUT',
@@ -108,55 +116,11 @@ const deleteVisitor = async (id: string): Promise<void> => {
   }
 };
 
-const updateFollowUp = async ({ id, ...followUpData }: { id: string } & UpdateFollowUpData): Promise<Visitor> => {
-  const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_URL}/api/visitors/${id}/follow-up`, {
-    method: 'PATCH',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(followUpData),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to update follow-up');
-  }
-
-  const data = await response.json();
-  return data.data;
-};
-
-// Stats
-const fetchVisitorStats = async () => {
-  const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_URL}/api/visitors/stats`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch visitor stats');
-  }
-
-  const data = await response.json();
-  return data.success ?data.data.data : { 
-    total: 0, 
-    thisMonth: 0, 
-    thisWeek: 0, 
-    pendingFollowUp: 0,
-    interestedInMembership: 0 
-  };
-};
-
 // Custom Hooks
 export const useVisitors = () => {
-  return useQuery({
+  return useQuery<Visitor[], Error>({
     queryKey: ['visitors'],
     queryFn: fetchVisitors,
-    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
@@ -164,11 +128,10 @@ export const useCreateVisitor = () => {
   const queryClient = useQueryClient();
   const { showCreateSuccess, showCreateError } = useOperationToasts();
   
-  return useMutation({
+  return useMutation<Visitor, Error, CreateVisitorData>({
     mutationFn: createVisitor,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['visitors'] });
-      queryClient.invalidateQueries({ queryKey: ['visitor-stats'] });
       showCreateSuccess('Visitante');
     },
     onError: (error: Error) => {
@@ -181,11 +144,10 @@ export const useUpdateVisitor = () => {
   const queryClient = useQueryClient();
   const { showUpdateSuccess, showUpdateError } = useOperationToasts();
   
-  return useMutation({
+  return useMutation<Visitor, Error, UpdateVisitorData>({
     mutationFn: updateVisitor,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['visitors'] });
-      queryClient.invalidateQueries({ queryKey: ['visitor-stats'] });
       showUpdateSuccess('Visitante');
     },
     onError: (error: Error) => {
@@ -198,40 +160,14 @@ export const useDeleteVisitor = () => {
   const queryClient = useQueryClient();
   const { showDeleteSuccess, showDeleteError } = useOperationToasts();
   
-  return useMutation({
+  return useMutation<void, Error, string>({
     mutationFn: deleteVisitor,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['visitors'] });
-      queryClient.invalidateQueries({ queryKey: ['visitor-stats'] });
       showDeleteSuccess('Visitante');
     },
     onError: (error: Error) => {
       showDeleteError('visitante', error.message);
     },
-  });
-};
-
-export const useUpdateFollowUp = () => {
-  const queryClient = useQueryClient();
-  const { showUpdateSuccess, showUpdateError } = useOperationToasts();
-  
-  return useMutation({
-    mutationFn: updateFollowUp,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['visitors'] });
-      queryClient.invalidateQueries({ queryKey: ['visitor-stats'] });
-      showUpdateSuccess('Seguimiento');
-    },
-    onError: (error: Error) => {
-      showUpdateError('seguimiento', error.message);
-    },
-  });
-};
-
-export const useVisitorStats = () => {
-  return useQuery({
-    queryKey: ['visitor-stats'],
-    queryFn: fetchVisitorStats,
-    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

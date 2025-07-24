@@ -53,10 +53,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               localStorage.removeItem('auth_token');
               localStorage.removeItem('refresh_token');
             }
-          } else {
-            // Token expirado ou inválido
-            localStorage.removeItem('auth_token');
-            localStorage.removeItem('refresh_token');
+          } else if (response.status === 401) {
+            // Token expirado, tentar renovar
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (refreshToken) {
+              try {
+                const refreshResponse = await fetch(`${API_URL}/api/auth/refresh`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ refresh_token: refreshToken })
+                });
+
+                if (refreshResponse.ok) {
+                  const refreshData = await refreshResponse.json();
+                  if (refreshData.success) {
+                    localStorage.setItem('auth_token', refreshData.data.token);
+                    if (refreshData.data.refresh_token) {
+                      localStorage.setItem('refresh_token', refreshData.data.refresh_token);
+                    }
+                    // Tentar verificar novamente com o novo token
+                    const newResponse = await fetch(`${API_URL}/api/auth/verify`, {
+                      headers: { 'Authorization': `Bearer ${refreshData.data.token}` }
+                    });
+                    if (newResponse.ok) {
+                      const newData = await newResponse.json();
+                      setUser(newData.data.user);
+                    }
+                  } else {
+                    logout(); // Se o refresh falhar, deslogar
+                  }
+                } else {
+                  logout(); // Se a requisição de refresh falhar, deslogar
+                }
+              } catch (e) {
+                logout(); // Se houver erro, deslogar
+              }
+            } else {
+              logout(); // Se não houver refresh token, deslogar
+            }
           }
         } catch (error) {
           console.error('Erro ao verificar token:', error);

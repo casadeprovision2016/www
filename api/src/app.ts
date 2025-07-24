@@ -17,6 +17,7 @@ import ministriesRoutes from './routes/ministries';
 import streamsRoutes from './routes/streams';
 import pastoralVisitsRoutes from './routes/pastoralVisits';
 import contributionsRoutes from './routes/contributions';
+import visitorsRoutes from './routes/visitors';
 import reportsRoutes from './routes/reports';
 import { authenticateToken, requireMemberOrAbove } from './middleware/auth';
 import { getDashboardStats } from './controllers/reportsController';
@@ -180,6 +181,7 @@ app.use('/api/ministries', ministriesRoutes);
 app.use('/api/streams', streamsRoutes);
 app.use('/api/pastoral-visits', pastoralVisitsRoutes);
 app.use('/api/contributions', contributionsRoutes);
+app.use('/api/visitors', visitorsRoutes);
 
 // Temporary backward compatibility route for old dashboard stats endpoint
 app.get('/api/dashboard/stats', authenticateToken, requireMemberOrAbove, getDashboardStats);

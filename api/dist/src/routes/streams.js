@@ -16,7 +16,7 @@ router.get('/:id', auth_1.requireMemberOrAbove, streamsController_1.getStreamByI
 // Criar transmissão (leader ou admin)
 router.post('/', auth_1.requireLeaderOrAdmin, (0, validation_1.validateAndSanitize)(validation_1.schemas.createStream), streamsController_1.createStream);
 // Atualizar transmissão (leader ou admin)
-router.put('/:id', auth_1.requireLeaderOrAdmin, streamsController_1.updateStream);
+router.put('/:id', auth_1.requireLeaderOrAdmin, (0, validation_1.validateAndSanitize)(validation_1.schemas.updateStream), streamsController_1.updateStream);
 // Finalizar transmissão (leader ou admin)
 router.post('/:id/end', auth_1.requireLeaderOrAdmin, streamsController_1.endStream);
 // Deletar transmissão (leader ou admin)

@@ -111,11 +111,11 @@ const Panel = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-2xl font-bold text-church-gold">
-                      {dashboardStats?.visitors.thisMonth || 0}
+                      {dashboardStats?.visitors.total || 0}
                     </p>
-                    <p className="text-gray-600">Visitantes este mes</p>
+                    <p className="text-gray-600">Total de visitantes</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {dashboardStats?.visitors.thisWeek || 0} esta semana
+                      Registrados en el sistema
                     </p>
                   </CardContent>
                 </Card>

@@ -11,7 +11,9 @@ import {
   uploadReceipt,
   getDonationStats,
   exportDonations,
-  getDonationsByUser
+  getDonationsByUser,
+  getDonationInfo,
+  updateDonationInfo
 } from '../controllers/donationsController';
 
 const router = Router();
@@ -21,6 +23,10 @@ router.get('/stats', getDonationStats);
 
 // Todas as outras rotas requerem autenticação
 router.use(authenticateToken);
+
+// Informações de doação (dados bancários, etc.)
+router.get('/info', requireMemberOrAbove, getDonationInfo);
+router.put('/info', requireLeaderOrAdmin, updateDonationInfo);
 
 // Listar doações com filtros e paginação
 router.get('/', 

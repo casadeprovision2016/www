@@ -401,3 +401,86 @@ export const getDonationsByUser = asyncHandler(async (req: AuthenticatedRequest,
     data: response
   });
 });
+
+export const getDonationInfo = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const cacheKey = 'donations:info';
+  const cached = await cacheService.get(cacheKey);
+  
+  if (cached) {
+    return res.json({
+      success: true,
+      data: cached
+    });
+  }
+
+  // Buscar informações de doação na tabela organization ou criar dados padrão
+  const { data, error } = await supabase
+    .from('organization')
+    .select('donation_info')
+    .single();
+
+  if (error || !data?.donation_info) {
+    // Retornar dados padrão se não existir configuração
+    const defaultInfo = {
+      id: '1',
+      iban: 'ES1021001419020200597614',
+      bic: 'CAIXESBBXXX',
+      titular: 'Centro Cristiano Casa de Provisión',
+      bizum: 'Em construção',
+      verse: '"Cada uno dé como propuso en su corazón: no con tristeza, ni por necesidad, porque Dios ama al dador alegre." — 2 Corintios 9:7',
+      additionalMethods: '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    await cacheService.set(cacheKey, defaultInfo, 3600); // 1 hora
+    
+    return res.json({
+      success: true,
+      data: defaultInfo
+    });
+  }
+
+  await cacheService.set(cacheKey, data.donation_info, 3600); // 1 hora
+
+  res.json({
+    success: true,
+    data: data.donation_info
+  });
+});
+
+export const updateDonationInfo = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { iban, bic, titular, bizum, verse, additionalMethods } = req.body;
+
+  const donationInfo = {
+    id: '1',
+    iban,
+    bic,
+    titular,
+    bizum,
+    verse,
+    additionalMethods,
+    updated_at: new Date().toISOString(),
+  };
+
+  // Atualizar na tabela organization
+  const { error } = await supabase
+    .from('organization')
+    .upsert({
+      id: 1,
+      donation_info: donationInfo,
+      updated_at: new Date().toISOString()
+    });
+
+  if (error) {
+    throw new AppError('Erro ao atualizar informações de doação', 500);
+  }
+
+  // Invalidar cache
+  await cacheService.del('donations:info');
+
+  res.json({
+    success: true,
+    data: donationInfo
+  });
+});

@@ -40,7 +40,7 @@ const fetchDonationInfo = async (): Promise<DonationInfo> => {
   }
 
   const data = await response.json();
-  return data.success ?data.data.data : {
+  return data.success ? data.data : {
     id: '1',
     iban: 'ES1021001419020200597614',
     bic: 'CAIXESBBXXX',

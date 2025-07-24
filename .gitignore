@@ -94,3 +94,4 @@ Thumbs.db
 # Shared
 shared/types/*.js
 shared/types/*.js.map
+.env

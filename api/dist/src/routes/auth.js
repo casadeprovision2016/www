@@ -6,7 +6,7 @@ const validation_1 = require("../middleware/validation");
 const errorHandler_1 = require("../middleware/errorHandler");
 const logger_1 = require("../utils/logger");
 const router = (0, express_1.Router)();
-const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 // Login
 router.post('/login', (0, validation_1.validateAndSanitize)(validation_1.schemas.login), (0, errorHandler_1.asyncHandler)(async (req, res) => {
     const { email, password } = req.body;

@@ -15,39 +15,6 @@ import {
 
 const router = Router();
 
-// Debug endpoint without auth (DEVELOPMENT ONLY) - Must be before auth middleware
-router.get('/debug', async (req, res) => {
-  try {
-    const { createClient } = require('@supabase/supabase-js');
-    const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-    
-    console.log('🔍 DEBUG: Starting ministries debug endpoint...');
-    const { data, error } = await supabase.from('ministries').select('*').limit(5);
-    
-    console.log('🔍 DEBUG: Query result - Error:', error);
-    console.log('🔍 DEBUG: Query result - Data count:', data?.length);
-    
-    return res.json({
-      success: true,
-      debug: true,
-      error: error,
-      dataCount: data?.length,
-      sampleData: data?.slice(0, 2)
-    });
-  } catch (err: any) {
-    console.error('❌ DEBUG ERROR:', err);
-    return res.json({
-      success: false,
-      debug: true,
-      error: err.message,
-      stack: err.stack
-    });
-  }
-});
-
 // Todas as rotas requerem autenticação
 router.use(authenticateToken);
 

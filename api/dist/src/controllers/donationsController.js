@@ -5,14 +5,14 @@ const supabase_js_1 = require("@supabase/supabase-js");
 const errorHandler_1 = require("../middleware/errorHandler");
 const cacheService_1 = require("../services/cacheService");
 const uploadService_1 = require("../services/uploadService");
-const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 exports.getDonations = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     const { page = 1, limit = 10, tipo, user_id, start_date, end_date, min_amount, max_amount, sort = 'data_doacao', order = 'desc' } = req.query;
     let query = supabase
         .from('donations')
         .select(`
       *,
-      user:users(id, name, email)
+      user:users!donations_user_id_fkey(id, nome, email)
     `, { count: 'exact' });
     // Filtros
     if (tipo) {
@@ -41,8 +41,29 @@ exports.getDonations = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     if (error) {
         throw new errorHandler_1.AppError('Erro ao buscar doações', 500);
     }
+    // Map Portuguese database fields to English frontend fields
+    const mappedData = (data || []).map(donation => ({
+        id: donation.id,
+        amount: donation.valor,
+        type: donation.tipo,
+        paymentMethod: donation.metodo_pagamento,
+        date: donation.data_doacao,
+        referenceMonth: donation.referencia_mes,
+        description: donation.descricao,
+        anonymous: donation.anonima,
+        receiptIssued: donation.recibo_emitido,
+        receiptNumber: donation.numero_recibo,
+        notes: donation.observacoes,
+        user: donation.user ? {
+            id: donation.user.id,
+            name: donation.user.nome,
+            email: donation.user.email
+        } : null,
+        created_at: donation.created_at,
+        updated_at: donation.updated_at
+    }));
     const response = {
-        data: data || [],
+        data: mappedData,
         total: count || 0,
         page: parseInt(page),
         limit: parseInt(limit),

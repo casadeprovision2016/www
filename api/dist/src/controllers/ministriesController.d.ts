@@ -1,5 +1,6 @@
 import { Response } from 'express';
-export declare const getMinistries: (req: import("express").Request, res: Response, next: import("express").NextFunction) => void;
+import { AuthenticatedRequest } from '@shared/types';
+export declare const getMinistries: (req: AuthenticatedRequest, res: Response) => Promise<Response<any, Record<string, any>>>;
 export declare const getMinistryById: (req: import("express").Request, res: Response, next: import("express").NextFunction) => void;
 export declare const createMinistry: (req: import("express").Request, res: Response, next: import("express").NextFunction) => void;
 export declare const updateMinistry: (req: import("express").Request, res: Response, next: import("express").NextFunction) => void;

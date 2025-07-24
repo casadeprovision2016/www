@@ -4,7 +4,7 @@ exports.getCustomReport = exports.getYearlyReport = exports.getMonthlyReport = e
 const supabase_js_1 = require("@supabase/supabase-js");
 const errorHandler_1 = require("../middleware/errorHandler");
 const cacheService_1 = require("../services/cacheService");
-const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 exports.getDashboardStats = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     const cacheKey = 'stats:dashboard';
     const cached = await cacheService_1.cacheService.get(cacheKey);

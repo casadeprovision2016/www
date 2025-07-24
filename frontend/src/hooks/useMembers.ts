@@ -61,7 +61,7 @@ const fetchMembers = async (): Promise<Member[]> => {
   }
 
   const data = await response.json();
-  return data.success ? data.data : [];
+  return data.success ? data.data.data : [];
 };
 
 const createMember = async (memberData: CreateMemberData): Promise<Member> => {
@@ -132,7 +132,7 @@ const fetchAttendance = async (): Promise<AttendanceRecord[]> => {
   }
 
   const data = await response.json();
-  return data.success ? data.data : [];
+  return data.success ? data.data.data : [];
 };
 
 const createAttendance = async (attendanceData: CreateAttendanceData): Promise<AttendanceRecord> => {
@@ -279,7 +279,7 @@ const fetchMemberStats = async () => {
   }
 
   const data = await response.json();
-  return data.success ? data.data : { total: 0, active: 0, inactive: 0 };
+  return data.success ?data.data.data : { total: 0, active: 0, inactive: 0 };
 };
 
 export const useMemberStats = () => {

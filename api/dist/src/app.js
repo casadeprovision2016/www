@@ -23,10 +23,12 @@ const contributions_1 = __importDefault(require("./routes/contributions"));
 const reports_1 = __importDefault(require("./routes/reports"));
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 4000;
+// Trust proxy for Cloudflare and rate limiting
+app.set('trust proxy', true);
 // Verificar variáveis de ambiente obrigatórias
 const requiredEnvVars = [
     'SUPABASE_URL',
-    'SUPABASE_SERVICE_KEY',
+    'SUPABASE_SERVICE_ROLE_KEY',
     'JWT_SECRET'
 ];
 for (const envVar of requiredEnvVars) {
@@ -78,25 +80,32 @@ app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
 // Request logging
 app.use(logger_1.requestLogger);
-// Rate limiting geral
+// Rate limiting geral (DESABILITADO PARA DESENVOLVIMENTO)
 const generalLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // máximo 100 requests por IP
+    max: 10000, // limite muito alto para desenvolvimento
     message: {
         success: false,
         error: 'Muitas requisições. Tente novamente em 15 minutos.'
     },
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => {
+        // Skip rate limiting completamente em desenvolvimento
+        return true; // Sempre pular rate limiting
+    }
 });
-app.use(generalLimiter);
+// app.use(generalLimiter); // DESABILITADO PARA DESENVOLVIMENTO
 // Rate limiting específico para autenticação
 const authLimiter = (0, express_rate_limit_1.default)({
     windowMs: 15 * 60 * 1000,
-    max: 5, // Apenas 5 tentativas de login por 15min
+    max: 20, // 20 tentativas de login por 15min (mais permissivo)
     message: {
         success: false,
         error: 'Muitas tentativas de login. Tente novamente em 15 minutos.'
+    },
+    skip: (req) => {
+        return req.hostname === 'localhost' || req.hostname === '127.0.0.1';
     }
 });
 // Rate limiting para upload
@@ -112,7 +121,7 @@ const uploadLimiter = (0, express_rate_limit_1.default)({
 app.get('/health', async (req, res) => {
     try {
         // Verificar conexão com Supabase
-        const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+        const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
         const { error: dbError } = await supabase
             .from('users')
             .select('id')
@@ -149,6 +158,10 @@ app.use('/api/ministries', ministries_1.default);
 app.use('/api/streams', streams_1.default);
 app.use('/api/pastoral-visits', pastoralVisits_1.default);
 app.use('/api/contributions', contributions_1.default);
+// Temporary redirect for old dashboard stats endpoint (backward compatibility)
+app.get('/api/dashboard/stats', (req, res) => {
+    res.redirect(301, '/api/reports/dashboard');
+});
 app.use('/api/reports', reports_1.default);
 // Upload endpoints com rate limiting
 app.use('/api/upload', uploadLimiter);

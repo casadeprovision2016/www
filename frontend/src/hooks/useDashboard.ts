@@ -38,7 +38,7 @@ export interface BirthdayMember {
 // API Functions
 const fetchDashboardStats = async (): Promise<DashboardStats> => {
   const token = localStorage.getItem('auth_token');
-  const response = await fetch(`${API_URL}/api/dashboard/stats`, {
+  const response = await fetch(`${API_URL}/api/reports/dashboard`, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
@@ -50,7 +50,7 @@ const fetchDashboardStats = async (): Promise<DashboardStats> => {
   }
 
   const data = await response.json();
-  return data.success ? data.data : {
+  return data.success ?data.data.data : {
     events: { total: 0, thisMonth: 0, upcoming: 0 },
     members: { total: 0, active: 0, inactive: 0 },
     visitors: { total: 0, thisMonth: 0, thisWeek: 0 },
@@ -72,7 +72,7 @@ const fetchUpcomingBirthdays = async (): Promise<BirthdayMember[]> => {
   }
 
   const data = await response.json();
-  return data.success ? data.data : [];
+  return data.success ?data.data.data : [];
 };
 
 // Custom Hooks

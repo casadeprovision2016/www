@@ -46,7 +46,7 @@ const fetchStreams = async (): Promise<Stream[]> => {
   }
 
   const data = await response.json();
-  return data.success ? data.data : [];
+  return data.success ? data.data.data : [];
 };
 
 const createStream = async (streamData: CreateStreamData): Promise<Stream> => {

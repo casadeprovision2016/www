@@ -28,6 +28,7 @@ export const authenticateToken = async (
     const { data: { user }, error } = await supabase.auth.getUser(token);
 
     if (error || !user) {
+      console.error('❌ Supabase auth.getUser error:', error);
       res.status(401).json({ 
         success: false, 
         error: 'Token inválido' 

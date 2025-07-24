@@ -63,7 +63,7 @@ const fetchMinistries = async (): Promise<Ministry[]> => {
   }
 
   const data = await response.json();
-  return data.success ? data.data : [];
+  return data.success ? data.data.data : [];
 };
 
 const fetchMinistryMembers = async (ministryId: string): Promise<MinistryMember[]> => {
@@ -80,7 +80,7 @@ const fetchMinistryMembers = async (ministryId: string): Promise<MinistryMember[
   }
 
   const data = await response.json();
-  return data.success ? data.data : [];
+  return data.success ? data.data.data : [];
 };
 
 const createMinistry = async (ministryData: CreateMinistryData): Promise<Ministry> => {

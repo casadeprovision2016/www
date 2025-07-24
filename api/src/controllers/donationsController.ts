@@ -28,7 +28,7 @@ export const getDonations = asyncHandler(async (req: AuthenticatedRequest, res: 
     .from('donations')
     .select(`
       *,
-      user:users(id, name, email)
+      user:users!donations_user_id_fkey(id, nome, email)
     `, { count: 'exact' });
 
   // Filtros
@@ -62,8 +62,30 @@ export const getDonations = asyncHandler(async (req: AuthenticatedRequest, res: 
     throw new AppError('Erro ao buscar doações', 500);
   }
 
+  // Map Portuguese database fields to English frontend fields
+  const mappedData = (data || []).map(donation => ({
+    id: donation.id,
+    amount: donation.valor,
+    type: donation.tipo,
+    paymentMethod: donation.metodo_pagamento,
+    date: donation.data_doacao,
+    referenceMonth: donation.referencia_mes,
+    description: donation.descricao,
+    anonymous: donation.anonima,
+    receiptIssued: donation.recibo_emitido,
+    receiptNumber: donation.numero_recibo,
+    notes: donation.observacoes,
+    user: donation.user ? {
+      id: donation.user.id,
+      name: donation.user.nome,
+      email: donation.user.email
+    } : null,
+    created_at: donation.created_at,
+    updated_at: donation.updated_at
+  }));
+
   const response: PaginatedResponse<any> = {
-    data: data || [],
+    data: mappedData,
     total: count || 0,
     page: parseInt(page),
     limit: parseInt(limit),

@@ -25,33 +25,20 @@ const mapMinistryToFrontend = (ministry: any) => {
 
 export const getMinistries = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    console.log('🔍 Starting getMinistries controller...');
-    console.log('🔍 User:', req.user?.email);
-    console.log('🔍 Environment check - SUPABASE_URL:', process.env.SUPABASE_URL ? 'SET' : 'NOT SET');
-    console.log('🔍 Environment check - SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET');
-    
-    console.log('🔍 Creating Supabase client...');
-    
     const { data, error } = await supabase
       .from('ministries')
       .select('*')
       .limit(10);
 
-    console.log('🔍 Supabase query completed');
-    console.log('🔍 Error:', error);
-    console.log('🔍 Data count:', data?.length);
-
     if (error) {
-      console.error('❌ Supabase error details:', JSON.stringify(error, null, 2));
+      console.error('Erro ao buscar ministérios:', error.message);
       return res.status(500).json({
         success: false,
-        error: 'Erro ao buscar ministérios: ' + error.message
+        error: 'Erro ao buscar ministérios'
       });
     }
 
-    console.log('✅ Raw data from Supabase:', JSON.stringify(data?.slice(0, 2), null, 2));
-
-    // Simple mapping
+    // Map Portuguese database fields to English frontend fields
     const mappedData = (data || []).map(ministry => ({
       id: ministry.id,
       name: ministry.nome,
@@ -61,8 +48,6 @@ export const getMinistries = async (req: AuthenticatedRequest, res: Response) =>
       created_at: ministry.created_at,
       updated_at: ministry.updated_at
     }));
-
-    console.log('✅ Mapped data count:', mappedData.length);
 
     return res.json({
       success: true,
@@ -75,11 +60,10 @@ export const getMinistries = async (req: AuthenticatedRequest, res: Response) =>
       }
     });
   } catch (error: any) {
-    console.error('❌ Controller error details:', error);
-    console.error('❌ Error stack:', error.stack);
+    console.error('Erro interno no controller de ministérios:', error.message);
     return res.status(500).json({
       success: false,
-      error: 'Erro interno: ' + error.message
+      error: 'Erro interno do servidor'
     });
   }
 };

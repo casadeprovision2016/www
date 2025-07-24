@@ -4,40 +4,63 @@ exports.updateMinistryMember = exports.removeMinistryMember = exports.addMinistr
 const supabase_js_1 = require("@supabase/supabase-js");
 const errorHandler_1 = require("../middleware/errorHandler");
 const cacheService_1 = require("../services/cacheService");
-const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
-exports.getMinistries = (0, errorHandler_1.asyncHandler)(async (req, res) => {
-    const { page = 1, limit = 10, sort = 'name', order = 'asc', ativo } = req.query;
-    let query = supabase
-        .from('ministries')
-        .select(`
-      *,
-      lider:users!ministries_lider_id_fkey(id, name, email),
-      _count:ministry_members(count)
-    `, { count: 'exact' });
-    // Filtros
-    if (ativo !== undefined) {
-        query = query.eq('ativo', ativo === 'true');
-    }
-    // Ordenação e paginação
-    query = query
-        .order(sort, { ascending: order === 'asc' })
-        .range((page - 1) * limit, page * limit - 1);
-    const { data, error, count } = await query;
-    if (error) {
-        throw new errorHandler_1.AppError('Erro ao buscar ministérios', 500);
-    }
-    const response = {
-        data: data || [],
-        total: count || 0,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total_pages: Math.ceil((count || 0) / limit)
+const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+// Função para mapear ministério para frontend
+const mapMinistryToFrontend = (ministry) => {
+    return {
+        id: ministry.id,
+        name: ministry.nome,
+        description: ministry.descricao,
+        leader_id: ministry.lider_id,
+        active: ministry.ativo,
+        created_at: ministry.created_at,
+        updated_at: ministry.updated_at,
+        leader: ministry.lider
     };
-    res.json({
-        success: true,
-        data: response
-    });
-});
+};
+const getMinistries = async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('ministries')
+            .select('*')
+            .limit(10);
+        if (error) {
+            console.error('Erro ao buscar ministérios:', error.message);
+            return res.status(500).json({
+                success: false,
+                error: 'Erro ao buscar ministérios'
+            });
+        }
+        // Map Portuguese database fields to English frontend fields
+        const mappedData = (data || []).map(ministry => ({
+            id: ministry.id,
+            name: ministry.nome,
+            description: ministry.descricao,
+            leader_id: ministry.lider_id,
+            active: ministry.ativo,
+            created_at: ministry.created_at,
+            updated_at: ministry.updated_at
+        }));
+        return res.json({
+            success: true,
+            data: {
+                data: mappedData,
+                total: data.length,
+                page: 1,
+                limit: 10,
+                total_pages: 1
+            }
+        });
+    }
+    catch (error) {
+        console.error('Erro interno no controller de ministérios:', error.message);
+        return res.status(500).json({
+            success: false,
+            error: 'Erro interno do servidor'
+        });
+    }
+};
+exports.getMinistries = getMinistries;
 exports.getMinistryById = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     const { id } = req.params;
     const { data, error } = await supabase

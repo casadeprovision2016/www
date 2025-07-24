@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.requireMemberOrAbove = exports.requireLeaderOrAdmin = exports.requireAdmin = exports.requireRole = exports.authenticateToken = void 0;
 const supabase_js_1 = require("@supabase/supabase-js");
-const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
@@ -16,6 +16,7 @@ const authenticateToken = async (req, res, next) => {
     try {
         const { data: { user }, error } = await supabase.auth.getUser(token);
         if (error || !user) {
+            console.error('❌ Supabase auth.getUser error:', error);
             res.status(401).json({
                 success: false,
                 error: 'Token inválido'

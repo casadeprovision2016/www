@@ -23,7 +23,7 @@ export const getStreams = asyncHandler(async (req: AuthenticatedRequest, res: Re
     .from('live_streams')
     .select(`
       *,
-      created_by:users!live_streams_created_by_fkey(name, email)
+      created_by:users!live_streams_created_by_fkey(nome, email)
     `, { count: 'exact' });
 
   // Filtros
@@ -59,8 +59,32 @@ export const getStreams = asyncHandler(async (req: AuthenticatedRequest, res: Re
     throw new AppError('Erro ao buscar transmissões', 500);
   }
 
+  // Map Portuguese database fields to English frontend fields
+  const mappedData = (data || []).map(stream => ({
+    id: stream.id,
+    title: stream.titulo,
+    description: stream.descricao,
+    streamUrl: stream.url_stream,
+    chatUrl: stream.url_chat,
+    startDate: stream.data_inicio,
+    endDate: stream.data_fim,
+    status: stream.status,
+    eventId: stream.evento_id,
+    views: stream.visualizacoes,
+    recordingUrl: stream.gravacao_url,
+    public: stream.publico,
+    password: stream.senha,
+    notes: stream.observacoes,
+    createdBy: stream.created_by ? {
+      name: stream.created_by.nome,
+      email: stream.created_by.email
+    } : null,
+    created_at: stream.created_at,
+    updated_at: stream.updated_at
+  }));
+
   const response: PaginatedResponse<any> = {
-    data: data || [],
+    data: mappedData,
     total: count || 0,
     page: parseInt(page),
     limit: parseInt(limit),

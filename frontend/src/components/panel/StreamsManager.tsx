@@ -1,109 +1,101 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Edit, Trash2, Video, ExternalLink } from 'lucide-react';
-
-interface Stream {
-  id: string;
-  title: string;
-  description: string;
-  url: string;
-  isLive: boolean;
-  thumbnail?: string;
-  date: string;
-}
+import { Plus, Edit, Trash2, Video, ExternalLink, Loader2 } from 'lucide-react';
+import { useStreams, useCreateStream, useUpdateStream, useDeleteStream } from '@/hooks/useStreams';
 
 const StreamsManager = () => {
-  const [streams, setStreams] = useState<Stream[]>([]);
+  const { data: streams = [], isLoading, error } = useStreams();
+  const createStreamMutation = useCreateStream();
+  const updateStreamMutation = useUpdateStream();
+  const deleteStreamMutation = useDeleteStream();
+  
   const [showForm, setShowForm] = useState(false);
-  const [editingStream, setEditingStream] = useState<Stream | null>(null);
+  const [editingStream, setEditingStream] = useState<any>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    url: '',
-    isLive: false,
-    thumbnail: '',
-    date: ''
+    streamUrl: '',
+    scheduledDate: '',
+    scheduledTime: '',
+    platform: 'youtube' as 'youtube' | 'facebook' | 'instagram' | 'zoom' | 'custom'
   });
-
-  useEffect(() => {
-    const storedStreams = localStorage.getItem('streams');
-    if (storedStreams) {
-      setStreams(JSON.parse(storedStreams));
-    } else {
-      const exampleStreams: Stream[] = [
-        {
-          id: '1',
-          title: 'Culto Dominical en Vivo',
-          description: 'Transmisión en vivo del culto dominical',
-          url: 'https://www.youtube.com/channel/UCiZGj9wHkU6X4XBjZZ5VoFg',
-          isLive: true,
-          date: new Date().toISOString().split('T')[0]
-        }
-      ];
-      setStreams(exampleStreams);
-      localStorage.setItem('streams', JSON.stringify(exampleStreams));
-    }
-  }, []);
-
-  const saveStreams = (newStreams: Stream[]) => {
-    setStreams(newStreams);
-    localStorage.setItem('streams', JSON.stringify(newStreams));
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (editingStream) {
-      const updatedStreams = streams.map(stream => 
-        stream.id === editingStream.id 
-          ? { ...editingStream, ...formData }
-          : stream
-      );
-      saveStreams(updatedStreams);
-      setEditingStream(null);
-    } else {
-      const newStream: Stream = {
-        id: Date.now().toString(),
+      updateStreamMutation.mutate({
+        id: editingStream.id,
         ...formData
-      };
-      saveStreams([...streams, newStream]);
+      }, {
+        onSuccess: () => {
+          setEditingStream(null);
+          setShowForm(false);
+          resetForm();
+        }
+      });
+    } else {
+      createStreamMutation.mutate(formData, {
+        onSuccess: () => {
+          setShowForm(false);
+          resetForm();
+        }
+      });
     }
+  };
 
+  const resetForm = () => {
     setFormData({
       title: '',
       description: '',
-      url: '',
-      isLive: false,
-      thumbnail: '',
-      date: ''
+      streamUrl: '',
+      scheduledDate: '',
+      scheduledTime: '',
+      platform: 'youtube'
     });
-    setShowForm(false);
   };
 
-  const handleEdit = (stream: Stream) => {
+  const handleEdit = (stream: any) => {
     setEditingStream(stream);
     setFormData({
       title: stream.title,
       description: stream.description,
-      url: stream.url,
-      isLive: stream.isLive,
-      thumbnail: stream.thumbnail || '',
-      date: stream.date
+      streamUrl: stream.streamUrl,
+      scheduledDate: stream.scheduledDate || '',
+      scheduledTime: stream.scheduledTime || '',
+      platform: stream.platform || 'youtube'
     });
     setShowForm(true);
   };
 
   const handleDelete = (id: string) => {
     if (confirm('¿Estás seguro de que quieres eliminar esta transmisión?')) {
-      const updatedStreams = streams.filter(stream => stream.id !== id);
-      saveStreams(updatedStreams);
+      deleteStreamMutation.mutate(id);
     }
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Cargando transmisiones...</span>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64 text-red-600">
+        <p>Error al cargar transmisiones: {error.message}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -138,14 +130,19 @@ const StreamsManager = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="date">Fecha</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({...formData, date: e.target.value})}
-                    required
-                  />
+                  <Label htmlFor="platform">Plataforma</Label>
+                  <select
+                    id="platform"
+                    value={formData.platform}
+                    onChange={(e) => setFormData({...formData, platform: e.target.value as any})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="youtube">YouTube</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="zoom">Zoom</option>
+                    <option value="custom">Personalizado</option>
+                  </select>
                 </div>
               </div>
               
@@ -160,37 +157,38 @@ const StreamsManager = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="url">URL de Transmisión</Label>
+                <Label htmlFor="streamUrl">URL de la Transmisión</Label>
                 <Input
-                  id="url"
+                  id="streamUrl"
                   type="url"
-                  value={formData.url}
-                  onChange={(e) => setFormData({...formData, url: e.target.value})}
-                  placeholder="https://youtube.com/..."
+                  value={formData.streamUrl}
+                  onChange={(e) => setFormData({...formData, streamUrl: e.target.value})}
+                  placeholder="https://youtube.com/live/..."
                   required
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="thumbnail">URL de Miniatura (opcional)</Label>
-                <Input
-                  id="thumbnail"
-                  type="url"
-                  value={formData.thumbnail}
-                  onChange={(e) => setFormData({...formData, thumbnail: e.target.value})}
-                  placeholder="https://..."
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isLive"
-                  checked={formData.isLive}
-                  onChange={(e) => setFormData({...formData, isLive: e.target.checked})}
-                  className="rounded"
-                />
-                <Label htmlFor="isLive">Transmisión en vivo</Label>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="scheduledDate">Fecha</Label>
+                  <Input
+                    id="scheduledDate"
+                    type="date"
+                    value={formData.scheduledDate}
+                    onChange={(e) => setFormData({...formData, scheduledDate: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="scheduledTime">Hora</Label>
+                  <Input
+                    id="scheduledTime"
+                    type="time"
+                    value={formData.scheduledTime}
+                    onChange={(e) => setFormData({...formData, scheduledTime: e.target.value})}
+                    required
+                  />
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -203,14 +201,7 @@ const StreamsManager = () => {
                   onClick={() => {
                     setShowForm(false);
                     setEditingStream(null);
-                    setFormData({
-                      title: '',
-                      description: '',
-                      url: '',
-                      isLive: false,
-                      thumbnail: '',
-                      date: ''
-                    });
+                    resetForm();
                   }}
                 >
                   Cancelar
@@ -227,15 +218,14 @@ const StreamsManager = () => {
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Video className="h-5 w-5 text-church-gold" />
-                    {stream.title}
-                  </CardTitle>
-                  {stream.isLive && (
-                    <div className="inline-block px-2 py-1 rounded text-xs text-white mt-2 bg-red-600">
-                      EN VIVO
-                    </div>
-                  )}
+                  <CardTitle className="text-lg">{stream.title}</CardTitle>
+                  <div className={`inline-block px-2 py-1 rounded text-xs text-white mt-2 ${
+                    stream.status === 'live' ? 'bg-red-600' : 
+                    stream.status === 'scheduled' ? 'bg-blue-600' : 'bg-gray-600'
+                  }`}>
+                    {stream.status === 'live' ? 'En Vivo' : 
+                     stream.status === 'scheduled' ? 'Programado' : 'Finalizado'}
+                  </div>
                 </div>
                 <div className="flex gap-1">
                   <Button
@@ -256,18 +246,39 @@ const StreamsManager = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-3">
               <p className="text-gray-600 text-sm">{stream.description}</p>
-              <div className="text-sm text-gray-600">{stream.date}</div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => window.open(stream.url, '_blank')}
-                className="w-full"
-              >
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Ver Transmisión
-              </Button>
+              
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <Video className="h-4 w-4 text-church-gold" />
+                  <span>Plataforma: {stream.platform || 'YouTube'}</span>
+                </div>
+                
+                {stream.startDate && (
+                  <div className="text-sm">
+                    <strong>Fecha:</strong> {new Date(stream.startDate).toLocaleDateString('es-ES')}
+                  </div>
+                )}
+                
+                {stream.views !== undefined && (
+                  <div className="text-sm text-gray-600">
+                    <strong>Visualizaciones:</strong> {stream.views}
+                  </div>
+                )}
+              </div>
+
+              {stream.streamUrl && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(stream.streamUrl, '_blank')}
+                  className="w-full"
+                >
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  Ver Transmisión
+                </Button>
+              )}
             </CardContent>
           </Card>
         ))}

@@ -44,7 +44,7 @@ const fetchEvents = async (): Promise<Event[]> => {
   }
 
   const data = await response.json();
-  return data.success ? data.data : [];
+  return data.success ? data.data.data : [];
 };
 
 const createEvent = async (eventData: CreateEventData): Promise<Event> => {
@@ -172,7 +172,7 @@ const fetchEventStats = async () => {
   }
 
   const data = await response.json();
-  return data.success ? data.data : { total: 0, thisMonth: 0, upcoming: 0 };
+  return data.success ?data.data.data : { total: 0, thisMonth: 0, upcoming: 0 };
 };
 
 export const useEventStats = () => {

@@ -4,12 +4,31 @@ exports.unregisterFromEvent = exports.registerForEvent = exports.getEventStats =
 const supabase_js_1 = require("@supabase/supabase-js");
 const errorHandler_1 = require("../middleware/errorHandler");
 const cacheService_1 = require("../services/cacheService");
-const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+// Helper function to map database fields to frontend format
+const mapEventToFrontend = (event) => {
+    if (!event)
+        return event;
+    return {
+        id: event.id,
+        title: event.titulo,
+        description: event.descricao,
+        date: event.data_inicio ? new Date(event.data_inicio).toISOString().split('T')[0] : '',
+        time: event.data_inicio ? new Date(event.data_inicio).toTimeString().substring(0, 5) : '',
+        location: event.local,
+        category: 'culto', // Valor padrão já que não existe na tabela
+        capacity: event.max_participantes,
+        status: 'scheduled', // Valor padrão já que não existe na tabela
+        created_by: event.created_by,
+        created_at: event.created_at,
+        updated_at: event.updated_at
+    };
+};
+const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 exports.getEvents = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     const { page = 1, limit = 10, upcoming, past, month, year, sort = 'data_inicio', order = 'desc' } = req.query;
     let query = supabase
         .from('events')
-        .select('*, created_by:users!events_created_by_fkey(name, email)', { count: 'exact' });
+        .select('*', { count: 'exact' });
     // Filtros
     if (upcoming) {
         query = query.gte('data_inicio', new Date().toISOString());
@@ -38,8 +57,9 @@ exports.getEvents = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     if (error) {
         throw new errorHandler_1.AppError('Erro ao buscar eventos', 500);
     }
+    const mappedData = (data || []).map(mapEventToFrontend);
     const response = {
-        data: data || [],
+        data: mappedData,
         total: count || 0,
         page: parseInt(page),
         limit: parseInt(limit),
@@ -54,16 +74,7 @@ exports.getEventById = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     const { id } = req.params;
     const { data, error } = await supabase
         .from('events')
-        .select(`
-      *,
-      created_by:users!events_created_by_fkey(name, email),
-      registrations:event_registrations(
-        id,
-        status,
-        registered_at,
-        user:users(name, email)
-      )
-    `)
+        .select('*')
         .eq('id', id)
         .single();
     if (error || !data) {
@@ -71,18 +82,24 @@ exports.getEventById = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     }
     res.json({
         success: true,
-        data
+        data: mapEventToFrontend(data)
     });
 });
 exports.createEvent = (0, errorHandler_1.asyncHandler)(async (req, res) => {
-    const eventData = req.body;
+    const { title, description, date, time, location, category, capacity } = req.body;
     const userId = req.user.id;
+    // Mapear campos do frontend para a estrutura da base de dados
+    const eventData = {
+        titulo: title,
+        descricao: description,
+        data_inicio: new Date(`${date}T${time}:00Z`).toISOString(),
+        local: location,
+        max_participantes: capacity,
+        created_by: userId
+    };
     const { data, error } = await supabase
         .from('events')
-        .insert({
-        ...eventData,
-        created_by: userId
-    })
+        .insert(eventData)
         .select()
         .single();
     if (error) {
@@ -93,13 +110,13 @@ exports.createEvent = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     await cacheService_1.cacheService.invalidate('stats:dashboard');
     res.status(201).json({
         success: true,
-        data,
+        data: mapEventToFrontend(data),
         message: 'Evento criado com sucesso'
     });
 });
 exports.updateEvent = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     const { id } = req.params;
-    const updateData = req.body;
+    const { title, description, date, time, location, category, capacity } = req.body;
     const userId = req.user.id;
     const userRole = req.user.role;
     // Verificar se o evento existe e se o usuário tem permissão
@@ -115,6 +132,19 @@ exports.updateEvent = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     if (userRole !== 'admin' && existingEvent.created_by !== userId) {
         throw new errorHandler_1.AppError('Sem permissão para editar este evento', 403);
     }
+    // Mapear campos do frontend para a estrutura da base de dados
+    const updateData = {};
+    if (title)
+        updateData.titulo = title;
+    if (description)
+        updateData.descricao = description;
+    if (date && time)
+        updateData.data_inicio = new Date(`${date}T${time}:00Z`).toISOString();
+    if (location)
+        updateData.local = location;
+    if (capacity)
+        updateData.max_participantes = capacity;
+    // Ignorar category e status pois não existem na tabela atual
     const { data, error } = await supabase
         .from('events')
         .update(updateData)
@@ -129,7 +159,7 @@ exports.updateEvent = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     await cacheService_1.cacheService.invalidate('stats:dashboard');
     res.json({
         success: true,
-        data,
+        data: mapEventToFrontend(data),
         message: 'Evento atualizado com sucesso'
     });
 });

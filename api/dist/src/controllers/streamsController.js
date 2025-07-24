@@ -3,14 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.endStream = exports.deleteStream = exports.updateStream = exports.createStream = exports.getLiveStream = exports.getStreamById = exports.getStreams = void 0;
 const supabase_js_1 = require("@supabase/supabase-js");
 const errorHandler_1 = require("../middleware/errorHandler");
-const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 exports.getStreams = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     const { page = 1, limit = 10, status, month, year, sort = 'data_inicio', order = 'desc' } = req.query;
     let query = supabase
         .from('live_streams')
         .select(`
       *,
-      created_by:users!live_streams_created_by_fkey(name, email)
+      created_by:users!live_streams_created_by_fkey(nome, email)
     `, { count: 'exact' });
     // Filtros
     if (status === 'ativa') {
@@ -40,8 +40,31 @@ exports.getStreams = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     if (error) {
         throw new errorHandler_1.AppError('Erro ao buscar transmissões', 500);
     }
+    // Map Portuguese database fields to English frontend fields
+    const mappedData = (data || []).map(stream => ({
+        id: stream.id,
+        title: stream.titulo,
+        description: stream.descricao,
+        streamUrl: stream.url_stream,
+        chatUrl: stream.url_chat,
+        startDate: stream.data_inicio,
+        endDate: stream.data_fim,
+        status: stream.status,
+        eventId: stream.evento_id,
+        views: stream.visualizacoes,
+        recordingUrl: stream.gravacao_url,
+        public: stream.publico,
+        password: stream.senha,
+        notes: stream.observacoes,
+        createdBy: stream.created_by ? {
+            name: stream.created_by.nome,
+            email: stream.created_by.email
+        } : null,
+        created_at: stream.created_at,
+        updated_at: stream.updated_at
+    }));
     const response = {
-        data: data || [],
+        data: mappedData,
         total: count || 0,
         page: parseInt(page),
         limit: parseInt(limit),

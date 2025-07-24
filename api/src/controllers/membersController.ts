@@ -25,21 +25,15 @@ export const getMembers = asyncHandler(async (req: AuthenticatedRequest, res: Re
     .from('members')
     .select(`
       *,
-      user:users(id, name, email, telefone),
-      ministries:ministry_members(
-        ministry:ministries(id, name)
-      )
+      user:users(id, nome, email, telefone)
     `, { count: 'exact' });
 
-  // Filtros
+  // Filtros baseados no schema real
   if (status) {
     query = query.eq('status', status);
   }
   if (membership_type) {
-    query = query.eq('membership_type', membership_type);
-  }
-  if (ministry_id) {
-    query = query.eq('ministry_members.ministry_id', ministry_id);
+    query = query.eq('tipo_membro', membership_type);
   }
 
   // Ordenação e paginação
@@ -53,8 +47,25 @@ export const getMembers = asyncHandler(async (req: AuthenticatedRequest, res: Re
     throw new AppError('Erro ao buscar membros', 500);
   }
 
+  // Map Portuguese database fields to English frontend fields
+  const mappedData = (data || []).map(member => ({
+    id: member.id,
+    name: member.user?.nome || 'Nome não informado',
+    email: member.user?.email || '',
+    phone: member.user?.telefone || '',
+    membershipType: member.tipo_membro,
+    joinDate: member.data_ingresso,
+    status: member.status,
+    baptized: member.batizado,
+    baptismDate: member.data_batismo,
+    tithe: member.dizimista,
+    notes: member.observacoes,
+    created_at: member.created_at,
+    updated_at: member.updated_at
+  }));
+
   const response: PaginatedResponse<any> = {
-    data: data || [],
+    data: mappedData,
     total: count || 0,
     page: parseInt(page),
     limit: parseInt(limit),

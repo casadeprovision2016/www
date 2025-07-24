@@ -4,7 +4,7 @@ exports.getVisitsByMember = exports.getVisitsByPastor = exports.getPastoralVisit
 const supabase_js_1 = require("@supabase/supabase-js");
 const errorHandler_1 = require("../middleware/errorHandler");
 const cacheService_1 = require("../services/cacheService");
-const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 exports.getPastoralVisits = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     const { page = 1, limit = 10, status, pastor_id, visitado_id, start_date, end_date, sort = 'data_visita', order = 'desc' } = req.query;
     let query = supabase

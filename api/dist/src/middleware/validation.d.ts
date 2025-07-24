@@ -3,48 +3,54 @@ import { z, ZodSchema } from 'zod';
 export declare const validateAndSanitize: (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => void;
 export declare const schemas: {
     createEvent: z.ZodObject<{
-        titulo: z.ZodString;
-        descricao: z.ZodOptional<z.ZodString>;
-        data_inicio: z.ZodString;
-        data_fim: z.ZodOptional<z.ZodString>;
-        local: z.ZodOptional<z.ZodString>;
-        max_participantes: z.ZodOptional<z.ZodNumber>;
+        title: z.ZodString;
+        description: z.ZodOptional<z.ZodString>;
+        date: z.ZodString;
+        time: z.ZodString;
+        location: z.ZodOptional<z.ZodString>;
+        category: z.ZodOptional<z.ZodString>;
+        capacity: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        titulo?: string;
-        descricao?: string;
-        data_inicio?: string;
-        data_fim?: string;
-        local?: string;
-        max_participantes?: number;
+        title?: string;
+        description?: string;
+        date?: string;
+        time?: string;
+        location?: string;
+        category?: string;
+        capacity?: number;
     }, {
-        titulo?: string;
-        descricao?: string;
-        data_inicio?: string;
-        data_fim?: string;
-        local?: string;
-        max_participantes?: number;
+        title?: string;
+        description?: string;
+        date?: string;
+        time?: string;
+        location?: string;
+        category?: string;
+        capacity?: number;
     }>;
     updateEvent: z.ZodObject<{
-        titulo: z.ZodOptional<z.ZodString>;
-        descricao: z.ZodOptional<z.ZodString>;
-        data_inicio: z.ZodOptional<z.ZodString>;
-        data_fim: z.ZodOptional<z.ZodString>;
-        local: z.ZodOptional<z.ZodString>;
-        max_participantes: z.ZodOptional<z.ZodNumber>;
+        title: z.ZodOptional<z.ZodString>;
+        description: z.ZodOptional<z.ZodString>;
+        date: z.ZodOptional<z.ZodString>;
+        time: z.ZodOptional<z.ZodString>;
+        location: z.ZodOptional<z.ZodString>;
+        category: z.ZodOptional<z.ZodString>;
+        capacity: z.ZodOptional<z.ZodNumber>;
     }, "strip", z.ZodTypeAny, {
-        titulo?: string;
-        descricao?: string;
-        data_inicio?: string;
-        data_fim?: string;
-        local?: string;
-        max_participantes?: number;
+        title?: string;
+        description?: string;
+        date?: string;
+        time?: string;
+        location?: string;
+        category?: string;
+        capacity?: number;
     }, {
-        titulo?: string;
-        descricao?: string;
-        data_inicio?: string;
-        data_fim?: string;
-        local?: string;
-        max_participantes?: number;
+        title?: string;
+        description?: string;
+        date?: string;
+        time?: string;
+        location?: string;
+        category?: string;
+        capacity?: number;
     }>;
     createMember: z.ZodObject<{
         user_id: z.ZodString;
@@ -85,16 +91,16 @@ export declare const schemas: {
         descricao: z.ZodOptional<z.ZodString>;
         data_doacao: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        descricao?: string;
         user_id?: string;
         valor?: number;
         tipo?: "dizimo" | "oferta" | "missoes" | "outros";
+        descricao?: string;
         data_doacao?: string;
     }, {
-        descricao?: string;
         user_id?: string;
         valor?: number;
         tipo?: "dizimo" | "oferta" | "missoes" | "outros";
+        descricao?: string;
         data_doacao?: string;
     }>;
     createStream: z.ZodObject<{
@@ -104,17 +110,17 @@ export declare const schemas: {
         data_inicio: z.ZodString;
         data_fim: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        titulo?: string;
         descricao?: string;
+        titulo?: string;
+        url_stream?: string;
         data_inicio?: string;
         data_fim?: string;
-        url_stream?: string;
     }, {
-        titulo?: string;
         descricao?: string;
+        titulo?: string;
+        url_stream?: string;
         data_inicio?: string;
         data_fim?: string;
-        url_stream?: string;
     }>;
     createMinistry: z.ZodObject<{
         name: z.ZodString;

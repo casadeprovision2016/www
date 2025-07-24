@@ -7,9 +7,13 @@ const ministriesController_1 = require("../controllers/ministriesController");
 const router = (0, express_1.Router)();
 // Todas as rotas requerem autenticação
 router.use(auth_1.authenticateToken);
+// Test endpoint (must come before /:id)
+router.get('/test', (req, res) => {
+    res.json({ success: true, message: 'Ministries route working' });
+});
 // Listar ministérios
-router.get('/', auth_1.requireMemberOrAbove, (0, validation_1.validateAndSanitize)(validation_1.schemas.pagination), ministriesController_1.getMinistries);
-// Buscar ministério por ID
+router.get('/', auth_1.requireMemberOrAbove, ministriesController_1.getMinistries);
+// Buscar ministério por ID (must come after specific routes)
 router.get('/:id', auth_1.requireMemberOrAbove, ministriesController_1.getMinistryById);
 // Buscar membros de um ministério
 router.get('/:id/members', auth_1.requireMemberOrAbove, (0, validation_1.validateAndSanitize)(validation_1.schemas.pagination), ministriesController_1.getMinistryMembers);

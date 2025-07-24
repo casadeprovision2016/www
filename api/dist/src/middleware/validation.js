@@ -57,20 +57,22 @@ const sanitizeObject = (obj) => {
 exports.schemas = {
     // Eventos
     createEvent: zod_1.z.object({
-        titulo: zod_1.z.string().min(1, 'Título é obrigatório').max(200, 'Título muito longo'),
-        descricao: zod_1.z.string().max(2000, 'Descrição muito longa').optional(),
-        data_inicio: zod_1.z.string().datetime('Data de início inválida'),
-        data_fim: zod_1.z.string().datetime('Data de fim inválida').optional(),
-        local: zod_1.z.string().max(200, 'Local muito longo').optional(),
-        max_participantes: zod_1.z.number().int().positive().max(1000).optional()
+        title: zod_1.z.string().min(1, 'Título é obrigatório').max(200, 'Título muito longo'),
+        description: zod_1.z.string().max(2000, 'Descrição muito longa').optional(),
+        date: zod_1.z.string().min(1, 'Data é obrigatória'),
+        time: zod_1.z.string().min(1, 'Hora é obrigatória'),
+        location: zod_1.z.string().max(200, 'Local muito longo').optional(),
+        category: zod_1.z.string().optional(), // Opcional pois não existe na tabela
+        capacity: zod_1.z.number().int().positive().max(1000).optional()
     }),
     updateEvent: zod_1.z.object({
-        titulo: zod_1.z.string().min(1).max(200).optional(),
-        descricao: zod_1.z.string().max(2000).optional(),
-        data_inicio: zod_1.z.string().datetime().optional(),
-        data_fim: zod_1.z.string().datetime().optional(),
-        local: zod_1.z.string().max(200).optional(),
-        max_participantes: zod_1.z.number().int().positive().max(1000).optional()
+        title: zod_1.z.string().min(1).max(200).optional(),
+        description: zod_1.z.string().max(2000).optional(),
+        date: zod_1.z.string().min(1).optional(),
+        time: zod_1.z.string().min(1).optional(),
+        location: zod_1.z.string().max(200).optional(),
+        category: zod_1.z.string().optional(),
+        capacity: zod_1.z.number().int().positive().max(1000).optional()
     }),
     // Membros
     createMember: zod_1.z.object({

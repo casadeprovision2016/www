@@ -5,27 +5,21 @@ const supabase_js_1 = require("@supabase/supabase-js");
 const errorHandler_1 = require("../middleware/errorHandler");
 const cacheService_1 = require("../services/cacheService");
 const date_fns_1 = require("date-fns");
-const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 exports.getMembers = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     const { page = 1, limit = 10, status, membership_type, ministry_id, sort = 'created_at', order = 'desc' } = req.query;
     let query = supabase
         .from('members')
         .select(`
       *,
-      user:users(id, name, email, telefone),
-      ministries:ministry_members(
-        ministry:ministries(id, name)
-      )
+      user:users(id, nome, email, telefone)
     `, { count: 'exact' });
-    // Filtros
+    // Filtros baseados no schema real
     if (status) {
         query = query.eq('status', status);
     }
     if (membership_type) {
-        query = query.eq('membership_type', membership_type);
-    }
-    if (ministry_id) {
-        query = query.eq('ministry_members.ministry_id', ministry_id);
+        query = query.eq('tipo_membro', membership_type);
     }
     // Ordenação e paginação
     query = query
@@ -35,8 +29,24 @@ exports.getMembers = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     if (error) {
         throw new errorHandler_1.AppError('Erro ao buscar membros', 500);
     }
+    // Map Portuguese database fields to English frontend fields
+    const mappedData = (data || []).map(member => ({
+        id: member.id,
+        name: member.user?.nome || 'Nome não informado',
+        email: member.user?.email || '',
+        phone: member.user?.telefone || '',
+        membershipType: member.tipo_membro,
+        joinDate: member.data_ingresso,
+        status: member.status,
+        baptized: member.batizado,
+        baptismDate: member.data_batismo,
+        tithe: member.dizimista,
+        notes: member.observacoes,
+        created_at: member.created_at,
+        updated_at: member.updated_at
+    }));
     const response = {
-        data: data || [],
+        data: mappedData,
         total: count || 0,
         page: parseInt(page),
         limit: parseInt(limit),

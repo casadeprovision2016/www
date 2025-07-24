@@ -52,7 +52,7 @@ const fetchVisitors = async (): Promise<Visitor[]> => {
   }
 
   const data = await response.json();
-  return data.success ? data.data : [];
+  return data.success ? data.data.data : [];
 };
 
 const createVisitor = async (visitorData: CreateVisitorData): Promise<Visitor> => {
@@ -142,7 +142,7 @@ const fetchVisitorStats = async () => {
   }
 
   const data = await response.json();
-  return data.success ? data.data : { 
+  return data.success ?data.data.data : { 
     total: 0, 
     thisMonth: 0, 
     thisWeek: 0, 

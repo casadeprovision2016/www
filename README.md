@@ -227,6 +227,12 @@ cccp/
          - `GET /api/ministries/:id/members`: Lista membros de um ministério.
          - `POST /api/ministries/members`: Adiciona membro a um ministério.
          - `DELETE /api/ministries/members/:id`: Remove membro de um ministério.
+       - **Controle de Assistência:**
+         - `GET /api/attendance`: Lista todas as presenças com paginação.
+         - `GET /api/attendance/event/:eventId`: Presenças por evento específico.
+         - `GET /api/attendance/stats`: Estatísticas de presença.
+         - `POST /api/attendance`: Marcar presença em evento.
+         - `PUT /api/attendance/:id`: Atualizar presença (requer permissões).
 
 2. **Frontend (React + Vite)**
    - **Configuração de Ambiente:**

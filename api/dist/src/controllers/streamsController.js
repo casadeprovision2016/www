@@ -7,6 +7,35 @@ const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, proce
 // Mapeia os campos do frontend para o banco de dados
 const mapToDbSchema = (data) => {
     const dbData = {};
+    console.log('🔄 Mapping data to DB schema:', data);
+    // Campos em português (vindos da validação) → campos do banco
+    if (data.titulo !== undefined)
+        dbData.titulo = data.titulo;
+    if (data.descricao !== undefined)
+        dbData.descricao = data.descricao;
+    if (data.url_stream !== undefined)
+        dbData.url_stream = data.url_stream;
+    if (data.url_chat !== undefined)
+        dbData.url_chat = data.url_chat;
+    if (data.data_inicio !== undefined)
+        dbData.data_inicio = data.data_inicio;
+    if (data.data_fim !== undefined)
+        dbData.data_fim = data.data_fim;
+    if (data.status !== undefined)
+        dbData.status = data.status;
+    if (data.evento_id !== undefined)
+        dbData.evento_id = data.evento_id;
+    if (data.visualizacoes !== undefined)
+        dbData.visualizacoes = data.visualizacoes;
+    if (data.gravacao_url !== undefined)
+        dbData.gravacao_url = data.gravacao_url;
+    if (data.publico !== undefined)
+        dbData.publico = data.publico;
+    if (data.senha !== undefined)
+        dbData.senha = data.senha;
+    if (data.observacoes !== undefined)
+        dbData.observacoes = data.observacoes;
+    // Manter compatibilidade com campos em inglês (caso existam)
     if (data.title !== undefined)
         dbData.titulo = data.title;
     if (data.description !== undefined)
@@ -19,8 +48,6 @@ const mapToDbSchema = (data) => {
         dbData.data_inicio = data.startDate;
     if (data.endDate !== undefined)
         dbData.data_fim = data.endDate;
-    if (data.status !== undefined)
-        dbData.status = data.status;
     if (data.eventId !== undefined)
         dbData.evento_id = data.eventId;
     if (data.views !== undefined)
@@ -33,6 +60,13 @@ const mapToDbSchema = (data) => {
         dbData.senha = data.password;
     if (data.notes !== undefined)
         dbData.observacoes = data.notes;
+    // Converter scheduledDate + scheduledTime para data_inicio
+    if (data.scheduledDate && data.scheduledTime) {
+        const dateTimeString = `${data.scheduledDate}T${data.scheduledTime}:00.000Z`;
+        dbData.data_inicio = dateTimeString;
+        console.log('📅 Combined scheduled date/time:', dateTimeString);
+    }
+    console.log('✅ Mapped DB data:', dbData);
     return dbData;
 };
 // Mapeia os campos do banco de dados para o frontend

@@ -18,8 +18,16 @@ router.post('/login', (0, validation_1.validateAndSanitize)(validation_1.schemas
             password
         });
         if (error || !data.user) {
-            logger_1.authLogger.loginAttempt(email, clientIP, false);
-            throw new errorHandler_1.AppError('Credenciais inválidas', 401);
+            try {
+                logger_1.authLogger?.loginAttempt(email, clientIP, false);
+            }
+            catch (logError) {
+                console.log('❌ Logger error:', logError);
+            }
+            return res.status(401).json({
+                success: false,
+                error: 'Credenciais inválidas'
+            });
         }
         // Buscar dados adicionais do usuário
         const { data: userData, error: userError } = await supabase
@@ -28,10 +36,23 @@ router.post('/login', (0, validation_1.validateAndSanitize)(validation_1.schemas
             .eq('id', data.user.id)
             .single();
         if (userError || !userData) {
-            logger_1.authLogger.loginAttempt(email, clientIP, false);
-            throw new errorHandler_1.AppError('Usuário não encontrado', 404);
+            try {
+                logger_1.authLogger?.loginAttempt(email, clientIP, false);
+            }
+            catch (logError) {
+                console.log('❌ Logger error:', logError);
+            }
+            return res.status(404).json({
+                success: false,
+                error: 'Usuário não encontrado'
+            });
         }
-        logger_1.authLogger.loginAttempt(email, clientIP, true);
+        try {
+            logger_1.authLogger?.loginAttempt(email, clientIP, true);
+        }
+        catch (logError) {
+            console.log('❌ Logger error:', logError);
+        }
         res.json({
             success: true,
             data: {
@@ -44,7 +65,12 @@ router.post('/login', (0, validation_1.validateAndSanitize)(validation_1.schemas
         });
     }
     catch (error) {
-        logger_1.authLogger.loginAttempt(email, clientIP, false);
+        try {
+            logger_1.authLogger?.loginAttempt(email, clientIP, false);
+        }
+        catch (logError) {
+            console.log('❌ Logger error in catch:', logError);
+        }
         throw error;
     }
 }));

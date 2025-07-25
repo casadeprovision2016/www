@@ -12,7 +12,7 @@ router.get('/stats', donationsController_1.getDonationStats);
 router.use(auth_1.authenticateToken);
 // Informações de doação (dados bancários, etc.)
 router.get('/info', auth_1.requireMemberOrAbove, donationsController_1.getDonationInfo);
-router.put('/info', auth_1.requireLeaderOrAdmin, donationsController_1.updateDonationInfo);
+router.put('/info', auth_1.requireLeaderOrAdmin, (0, validation_1.validateAndSanitize)(validation_1.schemas.updateDonationInfo), donationsController_1.updateDonationInfo);
 // Listar doações com filtros e paginação
 router.get('/', auth_1.requireMemberOrAbove, (0, validation_1.validateAndSanitize)(validation_1.schemas.pagination.merge(validation_1.schemas.donationQuery)), donationsController_1.getDonations);
 // Exportar doações (CSV/JSON)

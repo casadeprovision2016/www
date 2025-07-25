@@ -333,9 +333,11 @@ exports.getDonationInfo = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     // Buscar informações de doação na tabela organization ou criar dados padrão
     const { data, error } = await supabase
         .from('organization')
-        .select('donation_info')
+        .select('configuracoes')
+        .limit(1)
         .single();
-    if (error || !data?.donation_info) {
+    const donationInfo = data?.configuracoes?.donation_info;
+    if (error || !donationInfo) {
         // Retornar dados padrão se não existir configuração
         const defaultInfo = {
             id: '1',
@@ -354,14 +356,23 @@ exports.getDonationInfo = (0, errorHandler_1.asyncHandler)(async (req, res) => {
             data: defaultInfo
         });
     }
-    await cacheService_1.cacheService.set(cacheKey, data.donation_info, 3600); // 1 hora
+    await cacheService_1.cacheService.set(cacheKey, donationInfo, 3600); // 1 hora
     res.json({
         success: true,
-        data: data.donation_info
+        data: donationInfo
     });
 });
 exports.updateDonationInfo = (0, errorHandler_1.asyncHandler)(async (req, res) => {
+    console.log('🔄 Updating donation info with data:', req.body);
     const { iban, bic, titular, bizum, verse, additionalMethods } = req.body;
+    // Validação básica de IBAN
+    if (iban && !/^[A-Z]{2}[0-9]{2}[A-Z0-9]{4}[0-9]{7}([A-Z0-9]?){0,16}$/.test(iban)) {
+        throw new errorHandler_1.AppError('IBAN inválido', 400);
+    }
+    // Validação básica de BIC
+    if (bic && !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic)) {
+        throw new errorHandler_1.AppError('BIC inválido', 400);
+    }
     const donationInfo = {
         id: '1',
         iban,
@@ -372,17 +383,31 @@ exports.updateDonationInfo = (0, errorHandler_1.asyncHandler)(async (req, res) =
         additionalMethods,
         updated_at: new Date().toISOString(),
     };
-    // Atualizar na tabela organization
+    // Buscar configurações existentes primeiro
+    const { data: currentData } = await supabase
+        .from('organization')
+        .select('id, configuracoes')
+        .limit(1)
+        .maybeSingle(); // Usar maybeSingle para não dar erro se não existir
+    const currentConfig = currentData?.configuracoes || {};
+    const orgId = currentData?.id;
+    // Se não existe organização, criar uma nova; senão, atualizar a existente
     const { error } = await supabase
         .from('organization')
         .upsert({
-        id: 1,
-        donation_info: donationInfo,
+        ...(orgId && { id: orgId }), // Usar ID existente se houver
+        nome: 'Centro Cristiano Casa de Provisión', // Nome padrão se não existir
+        configuracoes: {
+            ...currentConfig,
+            donation_info: donationInfo
+        },
         updated_at: new Date().toISOString()
     });
     if (error) {
+        console.error('❌ Error updating donation info:', error);
         throw new errorHandler_1.AppError('Erro ao atualizar informações de doação', 500);
     }
+    console.log('✅ Donation info updated successfully');
     // Invalidar cache
     await cacheService_1.cacheService.del('donations:info');
     res.json({

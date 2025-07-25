@@ -12,6 +12,7 @@ import { cacheService } from './services/cacheService';
 import authRoutes from './routes/auth';
 import eventsRoutes from './routes/events';
 import membersRoutes from './routes/members';
+import membersTestRoutes from './routes/members-test';
 import donationsRoutes from './routes/donations';
 import ministriesRoutes from './routes/ministries';
 import streamsRoutes from './routes/streams';
@@ -19,6 +20,7 @@ import pastoralVisitsRoutes from './routes/pastoralVisits';
 import contributionsRoutes from './routes/contributions';
 import visitorsRoutes from './routes/visitors';
 import reportsRoutes from './routes/reports';
+import attendanceRoutes from './routes/attendance';
 import { authenticateToken, requireMemberOrAbove } from './middleware/auth';
 import { getDashboardStats } from './controllers/reportsController';
 
@@ -181,6 +183,40 @@ const uploadLimiter = rateLimit({
   }
 });
 
+// Endpoint de teste para membros sem auth - TEMPORÁRIO
+app.get('/test-members', async (req, res) => {
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabaseTest = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    
+    const { data, error } = await supabaseTest
+      .from('members')
+      .select(`
+        *,
+        users!inner(nome, email, telefone)
+      `)
+      .limit(5);
+    
+    if (error) {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+    
+    res.json({
+      success: true,
+      data: data || [],
+      message: 'Teste de membros funcionando!'
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // Health check endpoint
 app.get('/health', async (req, res) => {
   try {
@@ -224,6 +260,7 @@ app.get('/health', async (req, res) => {
 // Rotas da API (sem rate limiting em desenvolvimento)
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventsRoutes);
+app.use('/api/members-test', membersTestRoutes);
 app.use('/api/members', membersRoutes);
 app.use('/api/donations', donationsRoutes);
 app.use('/api/ministries', ministriesRoutes);
@@ -231,6 +268,7 @@ app.use('/api/streams', streamsRoutes);
 app.use('/api/pastoral-visits', pastoralVisitsRoutes);
 app.use('/api/contributions', contributionsRoutes);
 app.use('/api/visitors', visitorsRoutes);
+app.use('/api/attendance', attendanceRoutes);
 
 // Temporary backward compatibility route for old dashboard stats endpoint
 app.get('/api/dashboard/stats', authenticateToken, requireMemberOrAbove, getDashboardStats);

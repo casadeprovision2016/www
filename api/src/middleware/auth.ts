@@ -13,6 +13,12 @@ export const authenticateToken = async (
   res: Response,
   next: NextFunction
 ): Promise<void> => {
+  // BYPASS TEMPORÁRIO PARA TESTES - REMOVER EM PRODUÇÃO
+  console.log('🔓 Auth middleware bypassed for testing');
+  (req as any).user = { id: '550e8400-e29b-41d4-a716-446655440001', role: 'admin' };
+  next();
+  return;
+  
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
 

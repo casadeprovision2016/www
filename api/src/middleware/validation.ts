@@ -113,10 +113,25 @@ export const schemas = {
   }),
 
   updateMember: z.object({
-    membership_type: z.enum(['efetivo', 'em_experiencia', 'congregado']).optional(),
+    // Campos em português (banco de dados)
+    tipo_membro: z.enum(['efetivo', 'em_experiencia', 'congregado', 'visitante']).optional(),
     status: z.enum(['ativo', 'inativo']).optional(),
-    end_date: z.string().datetime().optional(),
-    observacoes: z.string().max(1000).optional()
+    observacoes: z.string().max(1000).optional(),
+    batizado: z.boolean().optional(),
+    data_batismo: z.string().optional(),
+    dizimista: z.boolean().optional(),
+    data_saida: z.string().optional(),
+    
+    // Campos em inglês (frontend) - serão mapeados no controller
+    membershipType: z.enum(['efetivo', 'em_experiencia', 'congregado', 'visitante']).optional(),
+    membership_type: z.enum(['efetivo', 'em_experiencia', 'congregado', 'visitante']).optional(),
+    notes: z.string().max(1000).optional(),
+    baptized: z.boolean().optional(),
+    baptismDate: z.string().optional(),
+    tithe: z.boolean().optional(),
+    joinDate: z.string().optional(),
+    endDate: z.string().optional(),
+    end_date: z.string().optional()
   }),
 
   // Doações

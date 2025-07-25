@@ -1,5 +1,5 @@
 # Multi-stage build para otimizar o tamanho final da imagem
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Instalar dependências necessárias para compilação
 RUN apk add --no-cache python3 make g++ vips-dev
@@ -21,7 +21,7 @@ COPY shared/ ./shared/
 RUN npm run build
 
 # Estágio final - imagem de produção
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Instalar dependências do sistema necessárias
 RUN apk add --no-cache \

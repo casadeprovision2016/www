@@ -26,7 +26,11 @@ router.use(authenticateToken);
 
 // Informações de doação (dados bancários, etc.)
 router.get('/info', requireMemberOrAbove, getDonationInfo);
-router.put('/info', requireLeaderOrAdmin, updateDonationInfo);
+router.put('/info', 
+  requireLeaderOrAdmin, 
+  validateAndSanitize(schemas.updateDonationInfo),
+  updateDonationInfo
+);
 
 // Listar doações com filtros e paginação
 router.get('/', 

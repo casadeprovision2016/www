@@ -28,6 +28,33 @@ const PORT = process.env.PORT || 4000;
 // Trust proxy for Cloudflare and rate limiting
 app.set('trust proxy', true);
 
+// Handler explícito para OPTIONS requests (ANTES de qualquer middleware)
+app.options('*', (req, res) => {
+  try {
+    console.log('🔄 OPTIONS request from:', req.headers.origin);
+    
+    const origin = req.headers.origin;
+    
+    // Em desenvolvimento, permitir qualquer localhost
+    if (origin?.includes('localhost')) {
+      res.header('Access-Control-Allow-Origin', origin);
+    } else {
+      res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:3001');
+    }
+    
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS,PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Content-Length, X-Requested-With, Accept, Origin, x-request-id');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Max-Age', '86400');
+    
+    console.log('✅ OPTIONS response sent');
+    return res.status(200).end();
+  } catch (error) {
+    console.error('❌ Error in OPTIONS handler:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Verificar variáveis de ambiente obrigatórias
 const requiredEnvVars = [
   'SUPABASE_URL',
@@ -65,24 +92,45 @@ const allowedOrigins = [
   'https://casadeprovision.es',
   'https://www.casadeprovision.es',
   'http://localhost:3000',
-  'http://localhost:8080'
+  'http://localhost:3001', // Frontend em porta 3001
+  'http://localhost:8080',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001', // IP local alternativo
+  'http://127.0.0.1:8080'
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Permite requisições sem origin (como Postman ou apps mobile)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
+    try {
+      // Permite requisições sem origin (como Postman ou apps mobile)
+      if (!origin) return callback(null, true);
+      
+      // Em desenvolvimento, permite qualquer localhost
+      if (process.env.NODE_ENV !== 'production' && origin?.includes('localhost')) {
+        console.log('✅ CORS allowing localhost origin:', origin);
+        return callback(null, true);
+      }
+      
+      if (allowedOrigins.includes(origin)) {
+        console.log('✅ CORS allowing whitelisted origin:', origin);
+        return callback(null, true);
+      }
+      
+      console.log('❌ CORS blocked origin:', origin);
+      return callback(null, false); // Não gerar erro, apenas bloquear
+    } catch (error) {
+      console.error('❌ Error in CORS origin callback:', error);
+      return callback(null, true); // Permitir em caso de erro
     }
-    
-    return callback(new Error('Não permitido pelo CORS'), false);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id', 'Accept', 'Origin', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  optionsSuccessStatus: 200,
+  preflightContinue: false
 }));
+
 
 // Parse JSON com limite
 app.use(express.json({ limit: '10mb' }));
@@ -109,7 +157,7 @@ const generalLimiter = rateLimit({
 
 // app.use(generalLimiter); // DESABILITADO PARA DESENVOLVIMENTO
 
-// Rate limiting específico para autenticação
+// Rate limiting específico para autenticação (DESABILITADO PARA DESENVOLVIMENTO)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20, // 20 tentativas de login por 15min (mais permissivo)
@@ -118,7 +166,8 @@ const authLimiter = rateLimit({
     error: 'Muitas tentativas de login. Tente novamente em 15 minutos.'
   },
   skip: (req) => {
-    return req.hostname === 'localhost' || req.hostname === '127.0.0.1';
+    // Skip rate limiting completamente em desenvolvimento
+    return true; // Sempre pular rate limiting
   }
 });
 
@@ -172,8 +221,8 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Rotas da API
-app.use('/api/auth', authLimiter, authRoutes);
+// Rotas da API (sem rate limiting em desenvolvimento)
+app.use('/api/auth', authRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/members', membersRoutes);
 app.use('/api/donations', donationsRoutes);

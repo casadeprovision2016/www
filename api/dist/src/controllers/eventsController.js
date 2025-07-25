@@ -179,10 +179,11 @@ exports.deleteEvent = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     if (userRole !== 'admin' && existingEvent.created_by !== userId) {
         throw new errorHandler_1.AppError('Sem permissão para deletar este evento', 403);
     }
+    // @ts-ignore
     const { error } = await supabase
         .from('events')
-        .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .delete();
     if (error) {
         throw new errorHandler_1.AppError('Erro ao deletar evento', 500);
     }

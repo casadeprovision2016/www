@@ -145,7 +145,7 @@ export const updateEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   const userRole = req.user.role;
 
   // Verificar se o evento existe e se o usuário tem permissão
-  const { data: existingEvent, error: fetchError } = await supabase
+  const { data: existingEvent, error: fetchError } = await (supabase as any)
     .from('events')
     .select('created_by')
     .eq('id', id)
@@ -197,7 +197,7 @@ export const deleteEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
   const userRole = req.user.role;
 
   // Verificar se o evento existe e permissões
-  const { data: existingEvent, error: fetchError } = await supabase
+  const { data: existingEvent, error: fetchError } = await (supabase as any)
     .from('events')
     .select('created_by')
     .eq('id', id)
@@ -211,10 +211,11 @@ export const deleteEvent = asyncHandler(async (req: AuthenticatedRequest, res: R
     throw new AppError('Sem permissão para deletar este evento', 403);
   }
 
-  const { error } = await supabase
+  // @ts-ignore
+  const { error } = await (supabase as any)
     .from('events')
-    .delete()
-    .eq('id', id);
+    .eq('id', id)
+    .delete();
 
   if (error) {
     throw new AppError('Erro ao deletar evento', 500);

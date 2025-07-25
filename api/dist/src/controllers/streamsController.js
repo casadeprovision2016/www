@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.endStream = exports.deleteStream = exports.updateStream = exports.createStream = exports.getLiveStream = exports.getStreamById = exports.getStreams = void 0;
+exports.getStreamStats = exports.endStream = exports.deleteStream = exports.updateStream = exports.createStream = exports.getLiveStream = exports.getStreamById = exports.getStreams = void 0;
 const supabase_js_1 = require("@supabase/supabase-js");
 const errorHandler_1 = require("../middleware/errorHandler");
 const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -154,5 +154,46 @@ exports.endStream = (0, errorHandler_1.asyncHandler)(async (req, res) => {
         throw new errorHandler_1.AppError('Erro ao finalizar transmissão', 500);
     }
     res.json({ success: true, data: mapToFrontendSchema(data), message: 'Transmissão finalizada com sucesso' });
+});
+exports.getStreamStats = (0, errorHandler_1.asyncHandler)(async (req, res) => {
+    const { cacheService } = require('../services/cacheService');
+    const cacheKey = 'stats:streams';
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+        return res.json({
+            success: true,
+            data: cached
+        });
+    }
+    // Total de transmissões
+    const { count: total } = await supabase
+        .from('live_streams')
+        .select('*', { count: 'exact', head: true });
+    // Transmissões este mês
+    const currentMonth = new Date();
+    const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+    const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+    const { count: thisMonth } = await supabase
+        .from('live_streams')
+        .select('*', { count: 'exact', head: true })
+        .gte('data_inicio', startOfMonth.toISOString())
+        .lte('data_inicio', endOfMonth.toISOString());
+    // Transmissões ativas (futuras)
+    const { count: active } = await supabase
+        .from('live_streams')
+        .select('*', { count: 'exact', head: true })
+        .gte('data_inicio', new Date().toISOString());
+    const stats = {
+        total: total || 0,
+        active: active || 0,
+        monthly: {
+            current: thisMonth || 0
+        }
+    };
+    await cacheService.set(cacheKey, stats, 1800); // 30 minutos
+    res.json({
+        success: true,
+        data: stats
+    });
 });
 //# sourceMappingURL=streamsController.js.map

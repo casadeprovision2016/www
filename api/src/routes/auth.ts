@@ -11,10 +11,11 @@ const supabase = createClient(
 );
 
 // Login
-router.post('/login', 
+router.post('/login',
   validateAndSanitize(schemas.login),
   asyncHandler(async (req, res) => {
     const { email, password } = req.body;
+    
     const clientIP = req.ip;
 
     try {
@@ -25,8 +26,16 @@ router.post('/login',
       });
 
       if (error || !data.user) {
-        authLogger.loginAttempt(email, clientIP, false);
-        throw new AppError('Credenciais inválidas', 401);
+        try {
+          authLogger?.loginAttempt(email, clientIP, false);
+        } catch (logError) {
+          console.log('❌ Logger error:', logError);
+        }
+        
+        return res.status(401).json({
+          success: false,
+          error: 'Credenciais inválidas'
+        });
       }
 
       // Buscar dados adicionais do usuário
@@ -37,11 +46,23 @@ router.post('/login',
         .single();
 
       if (userError || !userData) {
-        authLogger.loginAttempt(email, clientIP, false);
-        throw new AppError('Usuário não encontrado', 404);
+        try {
+          authLogger?.loginAttempt(email, clientIP, false);
+        } catch (logError) {
+          console.log('❌ Logger error:', logError);
+        }
+        
+        return res.status(404).json({
+          success: false,
+          error: 'Usuário não encontrado'
+        });
       }
 
-      authLogger.loginAttempt(email, clientIP, true);
+      try {
+        authLogger?.loginAttempt(email, clientIP, true);
+      } catch (logError) {
+        console.log('❌ Logger error:', logError);
+      }
 
       res.json({
         success: true,
@@ -55,7 +76,11 @@ router.post('/login',
       });
 
     } catch (error: any) {
-      authLogger.loginAttempt(email, clientIP, false);
+      try {
+        authLogger?.loginAttempt(email, clientIP, false);
+      } catch (logError) {
+        console.log('❌ Logger error in catch:', logError);
+      }
       throw error;
     }
   })

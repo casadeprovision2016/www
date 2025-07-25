@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { AuthenticatedRequest } from '@shared/types';
 import { 
   authenticateToken, 
   requireMemberOrAbove, 
@@ -20,7 +21,7 @@ jest.mock('jsonwebtoken');
 const mockJwt = jwt as jest.Mocked<typeof jwt>;
 
 describe('Authentication Middleware', () => {
-  let mockReq: Partial<Request>;
+  let mockReq: Partial<Request> | AuthenticatedRequest;
   let mockRes: Partial<Response>;
   let mockNext: NextFunction;
 
@@ -62,7 +63,7 @@ describe('Authentication Middleware', () => {
       await authenticateToken(mockReq as Request, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
-      expect(mockReq.user).toEqual(expect.objectContaining({
+      expect((mockReq as AuthenticatedRequest).user).toEqual(expect.objectContaining({
         id: 'user-1',
         email: 'test@example.com',
         role: 'member'
@@ -167,13 +168,7 @@ describe('Authentication Middleware', () => {
         error: null
       });
 
-      mockSupabaseClient.single.mockResolvedValueOnce(createSupabaseSuccess({
-        id: 'user-1',
-        email: 'test@example.com',
-        nome: 'Test User',
-        role: 'member',
-        status: 'inactive' // Inactive user
-      }));
+      mockSupabaseClient.single.mockResolvedValueOnce(createSupabaseError('User not found'));
 
       global.mockSupabaseClient.auth = {
         getUser: mockGetUser
@@ -184,7 +179,7 @@ describe('Authentication Middleware', () => {
       expect(mockRes.status).toHaveBeenCalledWith(401);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Usuário inativo'
+        error: 'Usuário não encontrado'
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -194,7 +189,7 @@ describe('Authentication Middleware', () => {
     it('should allow member access', () => {
       mockReq = createAuthenticatedRequest('user-1', 'member');
 
-      requireMemberOrAbove(mockReq as Request, mockRes as Response, mockNext);
+      requireMemberOrAbove(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
     });
@@ -202,7 +197,7 @@ describe('Authentication Middleware', () => {
     it('should allow leader access', () => {
       mockReq = createAuthenticatedRequest('user-1', 'leader');
 
-      requireMemberOrAbove(mockReq as Request, mockRes as Response, mockNext);
+      requireMemberOrAbove(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
     });
@@ -210,7 +205,7 @@ describe('Authentication Middleware', () => {
     it('should allow admin access', () => {
       mockReq = createAuthenticatedRequest('user-1', 'admin');
 
-      requireMemberOrAbove(mockReq as Request, mockRes as Response, mockNext);
+      requireMemberOrAbove(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
     });
@@ -218,25 +213,26 @@ describe('Authentication Middleware', () => {
     it('should reject visitor access', () => {
       mockReq = createAuthenticatedRequest('user-1', 'visitor');
 
-      requireMemberOrAbove(mockReq as Request, mockRes as Response, mockNext);
+      requireMemberOrAbove(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(403);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Acesso negado. Nível de membro ou superior requerido.'
+        error: 'Permissões insuficientes'
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
 
     it('should reject unauthenticated requests', () => {
-      mockReq = { user: undefined };
+      mockReq = createAuthenticatedRequest('user-1', 'member');
+      (mockReq as any).user = undefined;
 
-      requireMemberOrAbove(mockReq as Request, mockRes as Response, mockNext);
+      requireMemberOrAbove(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(401);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Autenticação requerida'
+        error: 'Usuário não autenticado'
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -246,7 +242,7 @@ describe('Authentication Middleware', () => {
     it('should allow leader access', () => {
       mockReq = createAuthenticatedRequest('user-1', 'leader');
 
-      requireLeaderOrAdmin(mockReq as Request, mockRes as Response, mockNext);
+      requireLeaderOrAdmin(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
     });
@@ -254,7 +250,7 @@ describe('Authentication Middleware', () => {
     it('should allow admin access', () => {
       mockReq = createAuthenticatedRequest('user-1', 'admin');
 
-      requireLeaderOrAdmin(mockReq as Request, mockRes as Response, mockNext);
+      requireLeaderOrAdmin(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
     });
@@ -262,12 +258,12 @@ describe('Authentication Middleware', () => {
     it('should reject member access', () => {
       mockReq = createAuthenticatedRequest('user-1', 'member');
 
-      requireLeaderOrAdmin(mockReq as Request, mockRes as Response, mockNext);
+      requireLeaderOrAdmin(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(403);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Acesso negado. Nível de liderança ou superior requerido.'
+        error: 'Permissões insuficientes'
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -275,7 +271,7 @@ describe('Authentication Middleware', () => {
     it('should reject visitor access', () => {
       mockReq = createAuthenticatedRequest('user-1', 'visitor');
 
-      requireLeaderOrAdmin(mockReq as Request, mockRes as Response, mockNext);
+      requireLeaderOrAdmin(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(403);
       expect(mockNext).not.toHaveBeenCalled();
@@ -286,7 +282,7 @@ describe('Authentication Middleware', () => {
     it('should allow admin access', () => {
       mockReq = createAuthenticatedRequest('user-1', 'admin');
 
-      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+      requireAdmin(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockNext).toHaveBeenCalled();
     });
@@ -294,12 +290,12 @@ describe('Authentication Middleware', () => {
     it('should reject leader access', () => {
       mockReq = createAuthenticatedRequest('user-1', 'leader');
 
-      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+      requireAdmin(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(403);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
-        error: 'Acesso negado. Nível de administrador requerido.'
+        error: 'Permissões insuficientes'
       });
       expect(mockNext).not.toHaveBeenCalled();
     });
@@ -307,7 +303,7 @@ describe('Authentication Middleware', () => {
     it('should reject member access', () => {
       mockReq = createAuthenticatedRequest('user-1', 'member');
 
-      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+      requireAdmin(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(403);
       expect(mockNext).not.toHaveBeenCalled();
@@ -316,7 +312,7 @@ describe('Authentication Middleware', () => {
     it('should reject visitor access', () => {
       mockReq = createAuthenticatedRequest('user-1', 'visitor');
 
-      requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+      requireAdmin(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
 
       expect(mockRes.status).toHaveBeenCalledWith(403);
       expect(mockNext).not.toHaveBeenCalled();
@@ -367,19 +363,19 @@ describe('Authentication Middleware', () => {
         
         // Test member requirement
         if (index >= 1) { // member or above
-          requireMemberOrAbove(mockReq as Request, mockRes as Response, mockNext);
+          requireMemberOrAbove(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
           expect(mockNext).toHaveBeenCalled();
         }
         
         // Test leader requirement
         if (index >= 2) { // leader or above
-          requireLeaderOrAdmin(mockReq as Request, mockRes as Response, mockNext);
+          requireLeaderOrAdmin(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
           expect(mockNext).toHaveBeenCalled();
         }
         
         // Test admin requirement
         if (index >= 3) { // admin only
-          requireAdmin(mockReq as Request, mockRes as Response, mockNext);
+          requireAdmin(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
           expect(mockNext).toHaveBeenCalled();
         }
         

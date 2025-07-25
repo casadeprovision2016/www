@@ -1,5 +1,5 @@
 # Dockerfile para worker de background jobs
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 RUN apk add --no-cache python3 make g++ vips-dev
 
@@ -16,7 +16,7 @@ COPY shared/ ./shared/
 RUN npm run build
 
 # Estágio final para worker
-FROM node:18-alpine
+FROM node:20-alpine
 
 RUN apk add --no-cache \
     vips \

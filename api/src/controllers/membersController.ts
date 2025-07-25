@@ -113,50 +113,146 @@ export const getMemberById = asyncHandler(async (req: AuthenticatedRequest, res:
 });
 
 export const createMember = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  const memberData: CreateMemberRequest = req.body;
+  console.log('🔄 Creating member with data:', req.body);
+  
+  const memberData = req.body;
+  let userId = memberData.user_id;
+  
+  // Se não tem user_id, criar um novo usuário primeiro
+  if (!userId && memberData.name && memberData.email) {
+    console.log('📝 Creating new user first');
+    
+    // Verificar se email já existe na tabela users  
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', memberData.email)
+      .single();
+    
+    if (existingUser) {
+      throw new AppError('Email já está em uso', 400);
+    }
+    
+    let authUserId: string;
+    
+    // Usar upsert em vez de insert para ser mais robusto
+    console.log('🔐 Creating or finding auth user');
+    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+      email: memberData.email,
+      password: Math.random().toString(36).slice(-8) + 'A1!', // Senha temporária
+      email_confirm: true
+    });
 
-  // Verificar se o usuário existe
-  const { data: user, error: userError } = await supabase
-    .from('users')
-    .select('id')
-    .eq('id', memberData.user_id)
-    .single();
+    if (authError) {
+      console.error('❌ Error creating auth user:', authError);
+      
+      // Se o email já existe no auth, buscar o usuário existente
+      if (authError.message?.includes('already registered')) {
+        console.log('🔍 Auth user already exists, trying to find existing user');
+        
+        // Buscar usuários para encontrar o ID do usuário com este email
+        const { data: allUsers } = await supabase.auth.admin.listUsers();
+        const existingAuthUser = allUsers?.users?.find((u: any) => u.email === memberData.email);
+        
+        if (existingAuthUser) {
+          authUserId = existingAuthUser.id;
+          console.log('✅ Found existing auth user with ID:', authUserId);
+        } else {
+          throw new AppError('Email já está registrado mas usuário não encontrado', 400);
+        }
+      } else {
+        throw new AppError('Erro ao criar usuário de autenticação', 500);
+      }
+    } else if (authUser.user) {
+      authUserId = authUser.user.id;
+      console.log('✅ New auth user created with ID:', authUserId);
+    } else {
+      throw new AppError('Falha ao criar usuário de autenticação', 500);
+    }
 
-  if (userError || !user) {
-    throw new AppError('Usuário não encontrado', 404);
+    // Criar registro na tabela users usando UPSERT para ser mais robusto
+    console.log('📋 Creating user record with UPSERT');
+    const { data: newUser, error: userError } = await supabase
+      .from('users')
+      .upsert({
+        id: authUserId,
+        nome: memberData.name,
+        email: memberData.email,
+        telefone: memberData.phone || null,
+        endereco: memberData.address || null,
+        data_nascimento: memberData.birthDate ? new Date(memberData.birthDate).toISOString().split('T')[0] : null,
+        role: 'member',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'id'
+      })
+      .select('id')
+      .single();
+    
+    if (userError || !newUser) {
+      console.error('❌ Error creating user record:', userError);
+      
+      // Se der erro na tabela users, tentar limpar o auth user criado
+      try {
+        await supabase.auth.admin.deleteUser(authUserId);
+        console.log('🗑️ Cleaned up auth user after failure');
+      } catch (cleanupError) {
+        console.error('❌ Failed to cleanup auth user:', cleanupError);
+      }
+      
+      throw new AppError('Erro ao criar registro de usuário', 500);
+    }
+    
+    userId = newUser.id;
+    console.log('✅ User record created with ID:', userId);
   }
-
+  
+  if (!userId) {
+    throw new AppError('ID do usuário é obrigatório', 400);
+  }
+  
   // Verificar se já é membro
   const { data: existing } = await supabase
     .from('members')
     .select('id')
-    .eq('user_id', memberData.user_id)
+    .eq('user_id', userId)
     .single();
-
+  
   if (existing) {
     throw new AppError('Usuário já é membro', 400);
   }
-
+  
+  // Preparar dados do membro
+  const tipoMembro = memberData.tipo_membro || memberData.membership_type || memberData.membershipType || 'congregado';
+  const dataIngresso = memberData.data_ingresso || memberData.join_date || memberData.joinDate || new Date().toISOString().split('T')[0]; // Formato DATE
+  
   const { data, error } = await supabase
     .from('members')
     .insert({
-      ...memberData,
-      status: 'ativo'
+      user_id: userId,
+      tipo_membro: tipoMembro,
+      data_ingresso: dataIngresso,
+      status: 'ativo',
+      observacoes: memberData.observacoes || memberData.notes || null
     })
     .select(`
       *,
-      user:users(name, email)
+      user:users(nome, email, telefone)
     `)
     .single();
-
+  
   if (error) {
+    console.error('❌ Error creating member:', error);
     throw new AppError('Erro ao criar membro', 500);
   }
-
+  
+  console.log('✅ Member created successfully');
+  
   // Invalidar cache
   await cacheService.invalidate('stats:members*');
   await cacheService.invalidate('stats:dashboard');
-
+  
   res.status(201).json({
     success: true,
     data,

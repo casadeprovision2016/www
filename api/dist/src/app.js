@@ -21,6 +21,7 @@ const ministries_1 = __importDefault(require("./routes/ministries"));
 const streams_1 = __importDefault(require("./routes/streams"));
 const pastoralVisits_1 = __importDefault(require("./routes/pastoralVisits"));
 const contributions_1 = __importDefault(require("./routes/contributions"));
+const visitors_1 = __importDefault(require("./routes/visitors"));
 const reports_1 = __importDefault(require("./routes/reports"));
 const auth_2 = require("./middleware/auth");
 const reportsController_1 = require("./controllers/reportsController");
@@ -161,6 +162,7 @@ app.use('/api/ministries', ministries_1.default);
 app.use('/api/streams', streams_1.default);
 app.use('/api/pastoral-visits', pastoralVisits_1.default);
 app.use('/api/contributions', contributions_1.default);
+app.use('/api/visitors', visitors_1.default);
 // Temporary backward compatibility route for old dashboard stats endpoint
 app.get('/api/dashboard/stats', auth_2.authenticateToken, auth_2.requireMemberOrAbove, reportsController_1.getDashboardStats);
 app.use('/api/reports', reports_1.default);

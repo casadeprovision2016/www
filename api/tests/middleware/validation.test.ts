@@ -230,13 +230,10 @@ describe('Validation Middleware', () => {
     describe('createMember schema', () => {
       it('should validate valid member data', () => {
         const validMemberData = {
-          name: 'John Doe',
-          email: 'john@example.com',
-          phone: '+1234567890',
-          address: '123 Main St',
-          birthDate: '1990-01-01',
-          membershipDate: '2025-01-01',
-          ministry: 'Adoración'
+          user_id: '550e8400-e29b-41d4-a716-446655440001',
+          membership_type: 'efetivo',
+          join_date: '2025-01-01T00:00:00Z',
+          observacoes: 'Membro ativo'
         };
 
         const result = schemas.createMember.safeParse(validMemberData);
@@ -245,10 +242,9 @@ describe('Validation Middleware', () => {
 
       it('should reject invalid member data', () => {
         const invalidMemberData = {
-          name: '', // Empty name
-          email: 'invalid-email', // Invalid email
-          phone: 'abc', // Invalid phone
-          birthDate: '2030-01-01' // Future birth date
+          user_id: 'invalid-uuid', // Invalid UUID
+          membership_type: 'invalid-type', // Invalid enum value
+          join_date: 'invalid-date', // Invalid datetime
         };
 
         const result = schemas.createMember.safeParse(invalidMemberData);
@@ -259,12 +255,11 @@ describe('Validation Middleware', () => {
     describe('createStream schema', () => {
       it('should validate valid stream data', () => {
         const validStreamData = {
-          title: 'Live Stream',
-          description: 'Test Stream',
-          streamUrl: 'https://youtube.com/live/test',
-          scheduledDate: '2025-08-01',
-          scheduledTime: '10:00',
-          platform: 'youtube'
+          titulo: 'Live Stream',
+          descricao: 'Test Stream',
+          url_stream: 'https://youtube.com/live/test',
+          data_inicio: '2025-08-01T10:00:00Z',
+          publico: true
         };
 
         const result = schemas.createStream.safeParse(validStreamData);
@@ -273,9 +268,9 @@ describe('Validation Middleware', () => {
 
       it('should reject invalid stream data', () => {
         const invalidStreamData = {
-          title: '', // Empty title
-          streamUrl: 'not-a-url', // Invalid URL
-          platform: 'invalid-platform' // Invalid platform
+          titulo: '', // Empty title
+          url_stream: 'not-a-url', // Invalid URL
+          data_inicio: 'invalid-date' // Invalid datetime
         };
 
         const result = schemas.createStream.safeParse(invalidStreamData);
@@ -410,8 +405,8 @@ describe('Validation Middleware', () => {
 
       mockReq = {
         body: {
-          active: 'true',
-          public: 'false'
+          active: true,
+          public: false
         }
       };
 

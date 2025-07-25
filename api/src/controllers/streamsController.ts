@@ -11,19 +11,46 @@ const supabase = createClient(
 // Mapeia os campos do frontend para o banco de dados
 const mapToDbSchema = (data: any): { [key: string]: any } => {
   const dbData: { [key: string]: any } = {};
+  
+  console.log('🔄 Mapping data to DB schema:', data);
+  
+  // Campos em português (vindos da validação) → campos do banco
+  if (data.titulo !== undefined) dbData.titulo = data.titulo;
+  if (data.descricao !== undefined) dbData.descricao = data.descricao;
+  if (data.url_stream !== undefined) dbData.url_stream = data.url_stream;
+  if (data.url_chat !== undefined) dbData.url_chat = data.url_chat;
+  if (data.data_inicio !== undefined) dbData.data_inicio = data.data_inicio;
+  if (data.data_fim !== undefined) dbData.data_fim = data.data_fim;
+  if (data.status !== undefined) dbData.status = data.status;
+  if (data.evento_id !== undefined) dbData.evento_id = data.evento_id;
+  if (data.visualizacoes !== undefined) dbData.visualizacoes = data.visualizacoes;
+  if (data.gravacao_url !== undefined) dbData.gravacao_url = data.gravacao_url;
+  if (data.publico !== undefined) dbData.publico = data.publico;
+  if (data.senha !== undefined) dbData.senha = data.senha;
+  if (data.observacoes !== undefined) dbData.observacoes = data.observacoes;
+  
+  // Manter compatibilidade com campos em inglês (caso existam)
   if (data.title !== undefined) dbData.titulo = data.title;
   if (data.description !== undefined) dbData.descricao = data.description;
   if (data.streamUrl !== undefined) dbData.url_stream = data.streamUrl;
   if (data.chatUrl !== undefined) dbData.url_chat = data.chatUrl;
   if (data.startDate !== undefined) dbData.data_inicio = data.startDate;
   if (data.endDate !== undefined) dbData.data_fim = data.endDate;
-  if (data.status !== undefined) dbData.status = data.status;
   if (data.eventId !== undefined) dbData.evento_id = data.eventId;
   if (data.views !== undefined) dbData.visualizacoes = data.views;
   if (data.recordingUrl !== undefined) dbData.gravacao_url = data.recordingUrl;
   if (data.public !== undefined) dbData.publico = data.public;
   if (data.password !== undefined) dbData.senha = data.password;
   if (data.notes !== undefined) dbData.observacoes = data.notes;
+  
+  // Converter scheduledDate + scheduledTime para data_inicio
+  if (data.scheduledDate && data.scheduledTime) {
+    const dateTimeString = `${data.scheduledDate}T${data.scheduledTime}:00.000Z`;
+    dbData.data_inicio = dateTimeString;
+    console.log('📅 Combined scheduled date/time:', dateTimeString);
+  }
+  
+  console.log('✅ Mapped DB data:', dbData);
   return dbData;
 };
 
@@ -166,4 +193,54 @@ export const endStream = asyncHandler(async (req: AuthenticatedRequest, res: Res
     throw new AppError('Erro ao finalizar transmissão', 500);
   }
   res.json({ success: true, data: mapToFrontendSchema(data), message: 'Transmissão finalizada com sucesso' });
+});
+
+export const getStreamStats = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { cacheService } = require('../services/cacheService');
+  const cacheKey = 'stats:streams';
+  const cached = await cacheService.get(cacheKey);
+  
+  if (cached) {
+    return res.json({
+      success: true,
+      data: cached
+    });
+  }
+
+  // Total de transmissões
+  const { count: total } = await supabase
+    .from('live_streams')
+    .select('*', { count: 'exact', head: true });
+
+  // Transmissões este mês
+  const currentMonth = new Date();
+  const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+
+  const { count: thisMonth } = await supabase
+    .from('live_streams')
+    .select('*', { count: 'exact', head: true })
+    .gte('data_inicio', startOfMonth.toISOString())
+    .lte('data_inicio', endOfMonth.toISOString());
+
+  // Transmissões ativas (futuras)
+  const { count: active } = await supabase
+    .from('live_streams')
+    .select('*', { count: 'exact', head: true })
+    .gte('data_inicio', new Date().toISOString());
+
+  const stats = {
+    total: total || 0,
+    active: active || 0,
+    monthly: {
+      current: thisMonth || 0
+    }
+  };
+
+  await cacheService.set(cacheKey, stats, 1800); // 30 minutos
+
+  res.json({
+    success: true,
+    data: stats
+  });
 });

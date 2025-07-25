@@ -5,6 +5,9 @@ import DOMPurify from 'isomorphic-dompurify';
 export const validateAndSanitize = (schema: ZodSchema) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
+      // Log para debug
+      console.log('🔍 Validating request body:', JSON.stringify(req.body, null, 2));
+      
       // Sanitizar strings no corpo da requisição
       const sanitized = sanitizeObject(req.body);
       
@@ -14,6 +17,7 @@ export const validateAndSanitize = (schema: ZodSchema) => {
       next();
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.log('❌ Validation error:', error.errors);
         res.status(400).json({
           success: false,
           error: 'Dados de entrada inválidos',
@@ -23,6 +27,7 @@ export const validateAndSanitize = (schema: ZodSchema) => {
           }))
         });
       } else {
+        console.log('❌ Validation error (not Zod):', error);
         res.status(400).json({
           success: false,
           error: 'Erro na validação dos dados'
@@ -75,12 +80,36 @@ export const schemas = {
     capacity: z.number().int().positive().max(1000).optional()
   }),
 
-  // Membros
+  // Membros - Schema flexível para criação completa
   createMember: z.object({
-    user_id: z.string().uuid('ID do usuário inválido'),
-    membership_type: z.enum(['efetivo', 'em_experiencia', 'congregado']),
-    join_date: z.string().datetime('Data de ingresso inválida'),
-    observacoes: z.string().max(1000).optional()
+    // Opção 1: ID de usuário existente
+    user_id: z.string().uuid('ID do usuário inválido').optional(),
+    
+    // Opção 2: Dados para criar novo usuário
+    name: z.string().min(1, 'Nome é obrigatório').max(200).optional(),
+    email: z.string().email('Email inválido').optional(),
+    phone: z.string().max(20).optional(),
+    address: z.string().max(500).optional(),
+    birthDate: z.string().optional(), // Data de nascimento
+    
+    // Dados específicos do membro
+    tipo_membro: z.enum(['efetivo', 'em_experiencia', 'congregado', 'visitante']).optional(),
+    membership_type: z.enum(['efetivo', 'em_experiencia', 'congregado', 'visitante']).optional(),
+    membershipType: z.enum(['efetivo', 'em_experiencia', 'congregado', 'visitante']).optional(), // Inglês
+    data_ingresso: z.string().optional(),
+    join_date: z.string().optional(),
+    joinDate: z.string().optional(), // Inglês
+    ministry: z.string().max(100).optional(),
+    status: z.enum(['active', 'inactive', 'ativo', 'inativo']).optional(),
+    observacoes: z.string().max(1000).optional(),
+    notes: z.string().max(1000).optional()
+  }).refine(data => {
+    // Deve ter user_id OU dados para criar usuário
+    const hasUserId = data.user_id;
+    const hasUserData = data.name && data.email;
+    return hasUserId || hasUserData;
+  }, {
+    message: 'Deve fornecer user_id ou dados completos (name, email) para criar usuário'
   }),
 
   updateMember: z.object({
@@ -99,25 +128,88 @@ export const schemas = {
     data_doacao: z.string().datetime('Data da doação inválida')
   }),
 
+  // Informações de doação (dados bancários)
+  updateDonationInfo: z.object({
+    iban: z.string().max(34).optional(),
+    bic: z.string().max(11).optional(),
+    titular: z.string().max(200).optional(),
+    bizum: z.string().max(20).optional(),
+    verse: z.string().max(200).optional(),
+    additionalMethods: z.string().max(1000).optional(),
+  }),
+
   // Streams
   createStream: z.object({
-    title: z.string().min(1, 'Título é obrigatório').max(200),
-    description: z.string().max(1000).optional(),
-    streamUrl: z.string().url('URL da stream inválida'),
-    startDate: z.string().datetime('Data de início inválida'),
-    endDate: z.string().datetime('Data de fim inválida').optional().nullable(),
+    // Campos em português
+    titulo: z.string().min(1, 'Título é obrigatório').max(200).optional(),
+    descricao: z.string().max(1000).optional(),
+    url_stream: z.string().min(1, 'URL da stream é obrigatória').optional(),
+    url_chat: z.string().optional(),
+    data_inicio: z.string().min(1, 'Data de início é obrigatória').optional(),
+    data_fim: z.string().optional().nullable(),
     status: z.enum(['agendado', 'ao_vivo', 'finalizado', 'cancelado']).optional(),
+    evento_id: z.string().uuid().optional(),
+    visualizacoes: z.number().int().min(0).optional(),
+    gravacao_url: z.string().optional(),
+    publico: z.boolean().optional(),
+    senha: z.string().max(50).optional(),
+    observacoes: z.string().optional(),
+    // Campos em inglês (para compatibilidade com frontend)
+    title: z.string().min(1, 'Title é obrigatório').max(200).optional(),
+    description: z.string().max(1000).optional(),
+    streamUrl: z.string().min(1, 'Stream URL é obrigatória').optional(),
+    chatUrl: z.string().optional(),
+    startDate: z.string().min(1).optional(),
+    endDate: z.string().optional().nullable(),
+    scheduledDate: z.string().optional(),
+    scheduledTime: z.string().optional(),
+    platform: z.string().optional(),
+    eventId: z.string().uuid().optional(),
+    views: z.number().int().min(0).optional(),
+    recordingUrl: z.string().optional(),
     public: z.boolean().optional(),
+    password: z.string().max(50).optional(),
+    notes: z.string().optional(),
+  }).refine(data => {
+    // Pelo menos titulo/title e url_stream/streamUrl devem estar presentes
+    const hasTitle = data.titulo || data.title;
+    const hasStreamUrl = data.url_stream || data.streamUrl;
+    return hasTitle && hasStreamUrl;
+  }, {
+    message: 'Título e URL da stream são obrigatórios'
   }),
 
   updateStream: z.object({
+    // Campos em português
+    titulo: z.string().min(1).max(200).optional(),
+    descricao: z.string().max(1000).optional(),
+    url_stream: z.string().min(1).optional(),
+    url_chat: z.string().optional(),
+    data_inicio: z.string().min(1).optional(),
+    data_fim: z.string().optional().nullable(),
+    status: z.enum(['agendado', 'ao_vivo', 'finalizado', 'cancelado']).optional(),
+    evento_id: z.string().uuid().optional(),
+    visualizacoes: z.number().int().min(0).optional(),
+    gravacao_url: z.string().optional(),
+    publico: z.boolean().optional(),
+    senha: z.string().max(50).optional(),
+    observacoes: z.string().optional(),
+    // Campos em inglês (para compatibilidade com frontend)
     title: z.string().min(1).max(200).optional(),
     description: z.string().max(1000).optional(),
-    streamUrl: z.string().url('URL da stream inválida').optional(),
-    startDate: z.string().datetime('Data de início inválida').optional(),
-    endDate: z.string().datetime('Data de fim inválida').optional(),
-    status: z.enum(['agendado', 'ao_vivo', 'finalizado', 'cancelado']).optional(),
+    streamUrl: z.string().min(1).optional(),
+    chatUrl: z.string().optional(),
+    startDate: z.string().min(1).optional(),
+    endDate: z.string().optional().nullable(),
+    scheduledDate: z.string().optional(),
+    scheduledTime: z.string().optional(),
+    platform: z.string().optional(),
+    eventId: z.string().uuid().optional(),
+    views: z.number().int().min(0).optional(),
+    recordingUrl: z.string().optional(),
     public: z.boolean().optional(),
+    password: z.string().max(50).optional(),
+    notes: z.string().optional(),
   }),
 
   // Ministérios

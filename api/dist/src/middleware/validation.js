@@ -120,6 +120,31 @@ exports.schemas = {
         descricao: zod_1.z.string().max(1000).optional(),
         lider_id: zod_1.z.string().uuid('ID do líder inválido')
     }),
+    // Visitantes
+    createVisitor: zod_1.z.object({
+        name: zod_1.z.string().min(1, 'Nome é obrigatório').max(100),
+        email: zod_1.z.string().email('Email inválido').optional(),
+        phone: zod_1.z.string().max(20).optional(),
+        address: zod_1.z.string().max(200).optional(),
+        visitDate: zod_1.z.string().datetime('Data da visita inválida'),
+        source: zod_1.z.enum(['invitation', 'social_media', 'walk_in', 'website', 'other']), // Adicione as opções de fonte
+        notes: zod_1.z.string().max(1000).optional(),
+        followUpStatus: zod_1.z.enum(['pending', 'contacted', 'scheduled', 'completed', 'no_interest']).optional(),
+        followUpDate: zod_1.z.string().datetime().optional(),
+        interestedInMembership: zod_1.z.boolean().optional(),
+    }),
+    updateVisitor: zod_1.z.object({
+        name: zod_1.z.string().min(1, 'Nome é obrigatório').max(100).optional(),
+        email: zod_1.z.string().email('Email inválido').optional(),
+        phone: zod_1.z.string().max(20).optional(),
+        address: zod_1.z.string().max(200).optional(),
+        visitDate: zod_1.z.string().datetime('Data da visita inválida').optional(),
+        source: zod_1.z.enum(['invitation', 'social_media', 'walk_in', 'website', 'other']).optional(),
+        notes: zod_1.z.string().max(1000).optional(),
+        followUpStatus: zod_1.z.enum(['pending', 'contacted', 'scheduled', 'completed', 'no_interest']).optional(),
+        followUpDate: zod_1.z.string().datetime().optional(),
+        interestedInMembership: zod_1.z.boolean().optional(),
+    }),
     // Visitas Pastorais
     createPastoralVisit: zod_1.z.object({
         visitado_id: zod_1.z.string().uuid('ID do visitado inválido'),

@@ -1,0 +1,18 @@
+╭───────────────────────────────────────────────────╮
+│ ✻ Welcome to Claude Code!                         │
+│                                                   │
+│   /help for help, /status for your current setup  │
+│                                                   │
+│   cwd: /home/user/www/api                         │
+╰───────────────────────────────────────────────────╯
+● Compact summary (ctrl+r to expand)
+  ⎿  Read src/controllers/membersController.ts (458 lines)
+  ⎿  Read src/middleware/validation.ts (287 lines)
+  ⎿  Read src/controllers/donationsController.ts (518 lines)
+  ⎿  Read src/routes/donations.ts (84 lines)
+  ⎿  Read src/controllers/streamsController.ts (247 lines)
+  ⎿  Todo list read (1 item)
+  ⎿  Claude usage limit reached. Your limit will reset at 4am (Europe/Madrid).
+
+      • /upgrade to increase your usage limit.
+

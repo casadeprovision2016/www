@@ -166,6 +166,74 @@ export declare const schemas: {
         name?: string;
         lider_id?: string;
     }>;
+    createVisitor: z.ZodObject<{
+        name: z.ZodString;
+        email: z.ZodOptional<z.ZodString>;
+        phone: z.ZodOptional<z.ZodString>;
+        address: z.ZodOptional<z.ZodString>;
+        visitDate: z.ZodString;
+        source: z.ZodEnum<["invitation", "social_media", "walk_in", "website", "other"]>;
+        notes: z.ZodOptional<z.ZodString>;
+        followUpStatus: z.ZodOptional<z.ZodEnum<["pending", "contacted", "scheduled", "completed", "no_interest"]>>;
+        followUpDate: z.ZodOptional<z.ZodString>;
+        interestedInMembership: z.ZodOptional<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        email?: string;
+        name?: string;
+        phone?: string;
+        address?: string;
+        visitDate?: string;
+        source?: "invitation" | "social_media" | "walk_in" | "website" | "other";
+        notes?: string;
+        followUpStatus?: "pending" | "contacted" | "scheduled" | "completed" | "no_interest";
+        followUpDate?: string;
+        interestedInMembership?: boolean;
+    }, {
+        email?: string;
+        name?: string;
+        phone?: string;
+        address?: string;
+        visitDate?: string;
+        source?: "invitation" | "social_media" | "walk_in" | "website" | "other";
+        notes?: string;
+        followUpStatus?: "pending" | "contacted" | "scheduled" | "completed" | "no_interest";
+        followUpDate?: string;
+        interestedInMembership?: boolean;
+    }>;
+    updateVisitor: z.ZodObject<{
+        name: z.ZodOptional<z.ZodString>;
+        email: z.ZodOptional<z.ZodString>;
+        phone: z.ZodOptional<z.ZodString>;
+        address: z.ZodOptional<z.ZodString>;
+        visitDate: z.ZodOptional<z.ZodString>;
+        source: z.ZodOptional<z.ZodEnum<["invitation", "social_media", "walk_in", "website", "other"]>>;
+        notes: z.ZodOptional<z.ZodString>;
+        followUpStatus: z.ZodOptional<z.ZodEnum<["pending", "contacted", "scheduled", "completed", "no_interest"]>>;
+        followUpDate: z.ZodOptional<z.ZodString>;
+        interestedInMembership: z.ZodOptional<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        email?: string;
+        name?: string;
+        phone?: string;
+        address?: string;
+        visitDate?: string;
+        source?: "invitation" | "social_media" | "walk_in" | "website" | "other";
+        notes?: string;
+        followUpStatus?: "pending" | "contacted" | "scheduled" | "completed" | "no_interest";
+        followUpDate?: string;
+        interestedInMembership?: boolean;
+    }, {
+        email?: string;
+        name?: string;
+        phone?: string;
+        address?: string;
+        visitDate?: string;
+        source?: "invitation" | "social_media" | "walk_in" | "website" | "other";
+        notes?: string;
+        followUpStatus?: "pending" | "contacted" | "scheduled" | "completed" | "no_interest";
+        followUpDate?: string;
+        interestedInMembership?: boolean;
+    }>;
     createPastoralVisit: z.ZodObject<{
         visitado_id: z.ZodString;
         pastor_id: z.ZodString;

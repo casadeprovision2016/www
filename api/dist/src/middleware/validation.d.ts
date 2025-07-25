@@ -484,11 +484,11 @@ export declare const schemas: {
         phone: z.ZodOptional<z.ZodString>;
         address: z.ZodOptional<z.ZodString>;
         visitDate: z.ZodString;
-        source: z.ZodEnum<["invitation", "social_media", "walk_in", "website", "other"]>;
+        source: z.ZodDefault<z.ZodEnum<["invitation", "social_media", "walk_in", "website", "other"]>>;
         notes: z.ZodOptional<z.ZodString>;
-        followUpStatus: z.ZodOptional<z.ZodEnum<["pending", "contacted", "scheduled", "completed", "no_interest"]>>;
+        followUpStatus: z.ZodDefault<z.ZodEnum<["pending", "contacted", "scheduled", "completed", "no_interest"]>>;
         followUpDate: z.ZodOptional<z.ZodString>;
-        interestedInMembership: z.ZodOptional<z.ZodBoolean>;
+        interestedInMembership: z.ZodDefault<z.ZodBoolean>;
     }, "strip", z.ZodTypeAny, {
         email?: string;
         name?: string;

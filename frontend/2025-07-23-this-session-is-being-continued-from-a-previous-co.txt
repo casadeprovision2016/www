@@ -33,7 +33,7 @@
 ● Write(src/hooks/useMembers.ts)
   ⎿  Wrote 275 lines to src/hooks/useMembers.ts                                    
      import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+     const API_URL = import.meta.env.VITE_API_URL;
      // Types
      export interface Member {
        id: string;
@@ -45,7 +45,7 @@
 ● Write(src/hooks/useDonations.ts)
   ⎿  Wrote 92 lines to src/hooks/useDonations.ts                                   
      import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+     const API_URL = import.meta.env.VITE_API_URL;
      // Types
      export interface DonationInfo {
        id: string;
@@ -59,7 +59,7 @@
 ● Write(src/hooks/useDashboard.ts)
   ⎿  Wrote 94 lines to src/hooks/useDashboard.ts                             
      import { useQuery } from '@tanstack/react-query';
-     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+     const API_URL = import.meta.env.VITE_API_URL;
      // Types
      export interface DashboardStats {
        events: {
@@ -1869,7 +1869,7 @@
        2    import { useState } from 'react';
        3 +  import { useOperationToasts } from './useToast';
        4    
-       5    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+       5    const API_URL = import.meta.env.VITE_API_URL;
        6    
 
 ● Update(src/hooks/useEvents.ts)
@@ -1939,7 +1939,7 @@
        1    import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
        2 +  import { useOperationToasts } from './useToast';
        3    
-       4    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+       4    const API_URL = import.meta.env.VITE_API_URL;
        5    
 
 ● Update(src/hooks/useMembers.ts)
@@ -2012,7 +2012,7 @@
        1    import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
        2 +  import { useOperationToasts } from './useToast';
        3    
-       4    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+       4    const API_URL = import.meta.env.VITE_API_URL;
        5    
 
 ● Update(src/hooks/useDonations.ts)
@@ -2106,7 +2106,7 @@
   ⎿  Wrote 196 lines to src/hooks/useStreams.ts                                    
      import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
      import { useOperationToasts } from './useToast';
-     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+     const API_URL = import.meta.env.VITE_API_URL;
      // Types
      export interface Stream {
        id: string;
@@ -2120,7 +2120,7 @@
   ⎿  Wrote 237 lines to src/hooks/useVisitors.ts                                   
      import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
      import { useOperationToasts } from './useToast';
-     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+     const API_URL = import.meta.env.VITE_API_URL;
      // Types
      export interface Visitor {
        id: string;
@@ -2134,7 +2134,7 @@
   ⎿  Wrote 273 lines to src/hooks/useMinistries.ts                                 
      import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
      import { useOperationToasts } from './useToast';
-     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+     const API_URL = import.meta.env.VITE_API_URL;
      // Types
      export interface Ministry {
        id: string;

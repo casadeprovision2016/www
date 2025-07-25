@@ -6,11 +6,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=https://api.casadeprovision.es
+        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+        - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     ports:
       - "3001:80"
     environment:
       - NODE_ENV=production
-      - VITE_API_URL=https://api.casadeprovision.es
     depends_on:
       - backend
     networks:

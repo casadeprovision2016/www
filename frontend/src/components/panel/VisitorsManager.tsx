@@ -24,6 +24,7 @@ const VisitorsManager = () => {
     visitDate: '',
     source: 'walk_in',
     notes: '',
+    followUpStatus: 'pending',
     followUpDate: '',
     interestedInMembership: false,
   });
@@ -48,6 +49,7 @@ const VisitorsManager = () => {
         visitDate: '',
         source: 'walk_in',
         notes: '',
+        followUpStatus: 'pending',
         followUpDate: '',
         interestedInMembership: false,
       });
@@ -66,6 +68,7 @@ const VisitorsManager = () => {
       visitDate: visitor.visitDate,
       source: visitor.source,
       notes: visitor.notes || '',
+      followUpStatus: visitor.followUpStatus || 'pending',
       followUpDate: visitor.followUpDate || '',
       interestedInMembership: visitor.interestedInMembership,
     });
@@ -187,20 +190,37 @@ const VisitorsManager = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="source">Fuente</Label>
-                <select
-                  id="source"
-                  value={formData.source}
-                  onChange={(e) => setFormData({...formData, source: e.target.value as any})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="invitation">Invitación</option>
-                  <option value="social_media">Redes Sociales</option>
-                  <option value="walk_in">Visita Espontánea</option>
-                  <option value="website">Sitio Web</option>
-                  <option value="other">Otro</option>
-                </select>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="source">Fuente</Label>
+                  <select
+                    id="source"
+                    value={formData.source}
+                    onChange={(e) => setFormData({...formData, source: e.target.value as any})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="invitation">Invitación</option>
+                    <option value="social_media">Redes Sociales</option>
+                    <option value="walk_in">Visita Espontánea</option>
+                    <option value="website">Sitio Web</option>
+                    <option value="other">Otro</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="followUpStatus">Estado de Seguimiento</Label>
+                  <select
+                    id="followUpStatus"
+                    value={formData.followUpStatus}
+                    onChange={(e) => setFormData({...formData, followUpStatus: e.target.value as any})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="pending">Pendiente</option>
+                    <option value="contacted">Contactado</option>
+                    <option value="scheduled">Programado</option>
+                    <option value="completed">Completado</option>
+                    <option value="no_interest">Sin Interés</option>
+                  </select>
+                </div>
               </div>
 
               <div className="space-y-2">

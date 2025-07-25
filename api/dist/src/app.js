@@ -24,6 +24,7 @@ const pastoralVisits_1 = __importDefault(require("./routes/pastoralVisits"));
 const contributions_1 = __importDefault(require("./routes/contributions"));
 const visitors_1 = __importDefault(require("./routes/visitors"));
 const reports_1 = __importDefault(require("./routes/reports"));
+const attendance_1 = __importDefault(require("./routes/attendance"));
 const auth_2 = require("./middleware/auth");
 const reportsController_1 = require("./controllers/reportsController");
 const app = (0, express_1.default)();
@@ -167,6 +168,34 @@ const uploadLimiter = (0, express_rate_limit_1.default)({
         error: 'Limite de upload excedido. Tente novamente em 1 minuto.'
     }
 });
+// Endpoint de teste para membros sem auth - TEMPORÁRIO
+app.get('/test-members', async (req, res) => {
+    try {
+        const { createClient } = require('@supabase/supabase-js');
+        const supabaseTest = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+        const { data, error } = await supabaseTest
+            .from('members')
+            .select(`
+        *,
+        users!inner(nome, email, telefone)
+      `)
+            .limit(5);
+        if (error) {
+            return res.status(500).json({ success: false, error: error.message });
+        }
+        res.json({
+            success: true,
+            data: data || [],
+            message: 'Teste de membros funcionando!'
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
 // Health check endpoint
 app.get('/health', async (req, res) => {
     try {
@@ -210,6 +239,7 @@ app.use('/api/streams', streams_1.default);
 app.use('/api/pastoral-visits', pastoralVisits_1.default);
 app.use('/api/contributions', contributions_1.default);
 app.use('/api/visitors', visitors_1.default);
+app.use('/api/attendance', attendance_1.default);
 // Temporary backward compatibility route for old dashboard stats endpoint
 app.get('/api/dashboard/stats', auth_2.authenticateToken, auth_2.requireMemberOrAbove, reportsController_1.getDashboardStats);
 app.use('/api/reports', reports_1.default);

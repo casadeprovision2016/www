@@ -21,6 +21,17 @@ RUN npm ci --legacy-peer-deps
 COPY src/ ./src/
 COPY public/ ./public/
 COPY index.html ./
+COPY .env ./
+
+# Args para build time
+ARG VITE_API_URL=https://api.casadeprovision.es
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+
+# Set environment variables para o build
+ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
 
 # Construir aplicação
 RUN npm run build

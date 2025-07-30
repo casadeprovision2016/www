@@ -40,6 +40,8 @@ app.options('*', (req, res) => {
     // Em desenvolvimento, permitir qualquer localhost
     if (origin?.includes('localhost')) {
       res.header('Access-Control-Allow-Origin', origin);
+    } else if (allowedOrigins.includes(origin)) {
+      res.header('Access-Control-Allow-Origin', origin);
     } else {
       res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:3001');
     }

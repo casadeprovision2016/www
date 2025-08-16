@@ -14,7 +14,7 @@ const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, proce
 exports.getMembers = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     // Mock user para testes - REMOVER EM PRODUÇÃO
     if (!req.user) {
-        req.user = { id: '550e8400-e29b-41d4-a716-446655440001', role: 'admin' };
+        req.user = { id: '550e8400-e29b-41d4-a716-446655444441', role: 'admin' };
     }
     const { page = 1, limit = 10, status, membership_type, ministry_id, sort = 'created_at', order = 'desc' } = req.query;
     let query = supabase
@@ -69,7 +69,7 @@ exports.getMembers = (0, errorHandler_1.asyncHandler)(async (req, res) => {
 exports.getMemberById = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     // Mock user para testes - REMOVER EM PRODUÇÃO
     if (!req.user) {
-        req.user = { id: '550e8400-e29b-41d4-a716-446655440001', role: 'admin' };
+        req.user = { id: '550e8400-e29b-41d4-a716-446655444441', role: 'admin' };
     }
     const { id } = req.params;
     const { data, error } = await supabase
@@ -231,7 +231,7 @@ exports.createMember = (0, errorHandler_1.asyncHandler)(async (req, res) => {
 exports.updateMember = (0, errorHandler_1.asyncHandler)(async (req, res) => {
     // Mock user para testes - REMOVER EM PRODUÇÃO
     if (!req.user) {
-        req.user = { id: '550e8400-e29b-41d4-a716-446655440001', role: 'admin' };
+        req.user = { id: '550e8400-e29b-41d4-a716-446655444441', role: 'admin' };
     }
     const { id } = req.params;
     const updateData = req.body;

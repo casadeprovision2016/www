@@ -3,7 +3,7 @@
 # Script de Health Check - CCCP API
 # Uso: ./scripts/health-check.sh
 
-API_URL="${API_URL:-http://localhost:4000}"
+API_URL="${API_URL:-http://localhost:4444}"
 REDIS_CONTAINER="${REDIS_CONTAINER:-cccp_redis_1}"
 
 echo "🔍 Verificando saúde dos serviços CCCP..."

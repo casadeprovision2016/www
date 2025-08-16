@@ -48,14 +48,14 @@ USER cccp
 
 # Configurar variáveis de ambiente
 ENV NODE_ENV=production
-ENV PORT=4000
+ENV PORT=4444
 
 # Expor porta
-EXPOSE 4000
+EXPOSE 4444
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:4000/health || exit 1
+  CMD curl -f http://localhost:4444/health || exit 1
 
 # Usar tini como init system para handling de sinais
 ENTRYPOINT ["/sbin/tini", "--"]

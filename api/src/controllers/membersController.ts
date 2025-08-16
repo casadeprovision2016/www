@@ -19,7 +19,7 @@ const supabase = createClient(
 export const getMembers = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   // Mock user para testes - REMOVER EM PRODUÇÃO
   if (!req.user) {
-    req.user = { id: '550e8400-e29b-41d4-a716-446655440001', role: 'admin' } as any;
+    req.user = { id: '550e8400-e29b-41d4-a716-446655444441', role: 'admin' } as any;
   }
   const { 
     page = 1, 
@@ -91,7 +91,7 @@ export const getMembers = asyncHandler(async (req: AuthenticatedRequest, res: Re
 export const getMemberById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   // Mock user para testes - REMOVER EM PRODUÇÃO
   if (!req.user) {
-    req.user = { id: '550e8400-e29b-41d4-a716-446655440001', role: 'admin' } as any;
+    req.user = { id: '550e8400-e29b-41d4-a716-446655444441', role: 'admin' } as any;
   }
   const { id } = req.params;
 
@@ -277,7 +277,7 @@ export const createMember = asyncHandler(async (req: AuthenticatedRequest, res: 
 export const updateMember = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   // Mock user para testes - REMOVER EM PRODUÇÃO
   if (!req.user) {
-    req.user = { id: '550e8400-e29b-41d4-a716-446655440001', role: 'admin' } as any;
+    req.user = { id: '550e8400-e29b-41d4-a716-446655444441', role: 'admin' } as any;
   }
   const { id } = req.params;
   const updateData = req.body;

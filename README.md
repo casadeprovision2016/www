@@ -55,7 +55,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - VITE_API_URL=http://api:4000
+      - VITE_API_URL=http://api:4444
       - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
       - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
     depends_on:
@@ -69,7 +69,7 @@ services:
       context: ./api
       dockerfile: Dockerfile
     ports:
-      - "4000:4000"
+      - "4444:4444"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
@@ -311,6 +311,17 @@ cccp/
 | `POST` | `/:id/end` | Finaliza transmissão | Token | Leader+ |
 | `DELETE` | `/:id` | Remove transmissão | Token | Leader+ |
 
+### 📖 **Microblog/Enseñanzas** (`/api/microblog`)
+| Método | Endpoint | Descrição | Auth | Permissão |
+|--------|----------|-----------|------|-----------|
+| `GET` | `/stats` | Estadísticas del microblog | Não | - |
+| `GET` | `/enseñanzas-martes` | Enseñanzas de los martes | Token | Member+ |
+| `GET` | `/posts` | Lista todos los posts | Token | Member+ |
+| `GET` | `/posts/:blogId/:postId` | Post específico | Token | Member+ |
+| `GET` | `/blog/:blogId` | Información del blog | Token | Member+ |
+| `GET` | `/category/:category` | Posts por categoría | Token | Member+ |
+| `POST` | `/cache/clear` | Limpia caché | Token | Leader+ |
+
 ### 👤 **Visitantes** (`/api/visitors`)
 | Método | Endpoint | Descrição | Auth | Permissão |
 |--------|----------|-----------|------|-----------|
@@ -372,7 +383,7 @@ cccp/
 
 2. **Frontend (React + Vite)**
    - **Configuração de Ambiente:**
-     - Criar um arquivo `.env` na raiz do frontend com a variável `VITE_API_URL=http://localhost:4000` (ou o endereço da API).
+     - Criar um arquivo `.env` na raiz do frontend com a variável `VITE_API_URL=http://localhost:4444` (ou o endereço da API).
    - **Autenticação:**
      - Modificar `src/contexts/AuthContext.tsx` para usar a API em vez de `localStorage`.
      - A função `login` deve fazer uma chamada `POST /api/auth/login`.
@@ -654,7 +665,7 @@ npm run test:watch
 - Configuração `.env.production`:
   ```env
   NODE_ENV=production
-  PORT=4000
+  PORT=4444
 
   # Supabase
   VITE_SUPABASE_URL=https://pzchczilvfhzudybmgms.supabase.co
@@ -717,7 +728,7 @@ npm run test:watch
   #!/bin/bash
   # scripts/health-check.sh
 
-  API_URL="http://localhost:4000"
+  API_URL="http://localhost:4444"
   FRONTEND_URL="http://localhost:3000"
 
   # Verificar API
@@ -846,7 +857,7 @@ npm run test:watch
     COPY package*.json ./
 
     USER nextjs
-    EXPOSE 4000
+    EXPOSE 4444
 
     CMD ["node", "dist/app.js"]
     ```

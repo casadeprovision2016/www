@@ -4,7 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { LogOut, Calendar, Users, Settings, Home, Video, DollarSign, UserPlus, User, Loader2 } from 'lucide-react';
+import { LogOut, Calendar, Users, Settings, Home, Video, DollarSign, UserPlus, User, Loader2, BookOpen } from 'lucide-react';
 import { useDashboardStats } from '@/hooks/useDashboard';
 import EventsManager from '@/components/panel/EventsManager';
 import MembersManager from '@/components/panel/MembersManager';
@@ -13,6 +13,7 @@ import StreamsManager from '@/components/panel/StreamsManager';
 import DonationsManager from '@/components/panel/DonationsManager';
 import VisitorsManager from '@/components/panel/VisitorsManager';
 import PastoralVisitsManager from '@/components/panel/PastoralVisitsManager';
+import MicroblogManager from '@/components/panel/MicroblogManager';
 import BirthdaysList from '@/components/panel/BirthdaysList';
 
 const Panel = () => {
@@ -28,6 +29,7 @@ const Panel = () => {
   const allSections = [
     { id: 'dashboard', name: 'Dashboard', icon: Home, resource: 'dashboard' },
     { id: 'events', name: 'Eventos', icon: Calendar, resource: 'events' },
+    { id: 'microblog', name: 'Enseñanzas', icon: BookOpen, resource: 'microblog' },
     { id: 'streams', name: 'Transmisiones', icon: Video, resource: 'streams' },
     { id: 'donations', name: 'Donaciones', icon: DollarSign, resource: 'donations' },
     { id: 'members', name: 'Miembros', icon: Users, resource: 'members' },
@@ -55,6 +57,8 @@ const Panel = () => {
     switch (activeSection) {
       case 'events':
         return canAccess('events') ? <EventsManager /> : null;
+      case 'microblog':
+        return canAccess('microblog') ? <MicroblogManager /> : null;
       case 'streams':
         return canAccess('streams') ? <StreamsManager /> : null;
       case 'donations':

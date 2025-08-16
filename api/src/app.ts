@@ -21,11 +21,12 @@ import contributionsRoutes from './routes/contributions';
 import visitorsRoutes from './routes/visitors';
 import reportsRoutes from './routes/reports';
 import attendanceRoutes from './routes/attendance';
+import microblogRoutes from './routes/microblog';
 import { authenticateToken, requireMemberOrAbove } from './middleware/auth';
 import { getDashboardStats } from './controllers/reportsController';
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4444;
 
 // Trust proxy for Cloudflare and rate limiting
 app.set('trust proxy', true);
@@ -271,6 +272,7 @@ app.use('/api/pastoral-visits', pastoralVisitsRoutes);
 app.use('/api/contributions', contributionsRoutes);
 app.use('/api/visitors', visitorsRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/microblog', microblogRoutes);
 
 // Temporary backward compatibility route for old dashboard stats endpoint
 app.get('/api/dashboard/stats', authenticateToken, requireMemberOrAbove, getDashboardStats);

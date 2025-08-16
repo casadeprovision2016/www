@@ -167,7 +167,7 @@ api/
 
 ### Health Check
 ```bash
-curl http://localhost:4000/health
+curl http://localhost:4444/health
 ```
 
 ### Logs

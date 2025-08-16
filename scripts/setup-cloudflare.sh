@@ -199,7 +199,7 @@ test_connectivity() {
         print_error "Frontend local: FALHA"
     fi
     
-    if curl -s -o /dev/null -w "%{http_code}" http://localhost:4000/health | grep -q "200"; then
+    if curl -s -o /dev/null -w "%{http_code}" http://localhost:4444/health | grep -q "200"; then
         print_success "API local: OK"
     else
         print_error "API local: FALHA"

@@ -179,8 +179,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Definir permissões por role
     const permissions = {
-      admin: ['dashboard', 'events', 'members', 'donations', 'streams', 'ministries', 'visitors', 'pastoral-visits', 'settings'],
-      leader: ['dashboard', 'events', 'members', 'streams', 'ministries', 'visitors', 'pastoral-visits'],
+      admin: ['dashboard', 'events', 'members', 'donations', 'streams', 'ministries', 'visitors', 'pastoral-visits', 'microblog', 'settings'],
+      leader: ['dashboard', 'events', 'members', 'streams', 'ministries', 'visitors', 'pastoral-visits', 'microblog'],
       member: ['dashboard', 'events'],
       visitor: ['dashboard']
     };

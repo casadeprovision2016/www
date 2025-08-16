@@ -230,7 +230,7 @@ describe('Validation Middleware', () => {
     describe('createMember schema', () => {
       it('should validate valid member data', () => {
         const validMemberData = {
-          user_id: '550e8400-e29b-41d4-a716-446655440001',
+          user_id: '550e8400-e29b-41d4-a716-446655444441',
           membership_type: 'efetivo',
           join_date: '2025-01-01T00:00:00Z',
           observacoes: 'Membro ativo'

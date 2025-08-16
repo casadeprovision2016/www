@@ -7,13 +7,13 @@ Este documento explica como o Cloudflare Tunnel está configurado no projeto CCC
 ### Producción
 - **casadeprovision.es** → Frontend (frontend:80)
 - **www.casadeprovision.es** → Frontend (frontend:80)
-- **api.casadeprovision.es** → Backend (backend:4000)
+- **api.casadeprovision.es** → Backend (backend:4444)
 
 ## Configuración Docker
 
 ### Serviços
 - `frontend`: React app rodando na porta 80 (internamente)
-- `backend`: API Node.js rodando na porta 4000 (internamente)
+- `backend`: API Node.js rodando na porta 4444 (internamente)
 - `cloudflare-tunnel`: Túnel Cloudflare conectando os domínios aos serviços
 
 ### Variáveis de Ambiente Necessárias
@@ -35,7 +35,7 @@ VITE_API_URL=https://api.casadeprovision.es
 docker-compose up frontend backend redis
 
 # Frontend: http://localhost:3001
-# Backend: http://localhost:4000
+# Backend: http://localhost:4444
 ```
 
 ### Producción con Cloudflare Tunnel
@@ -51,7 +51,7 @@ docker-compose logs -f cloudflare-tunnel
 
 ### Health Checks
 - Frontend: `curl http://frontend:80/health`
-- Backend: `curl http://backend:4000/health`
+- Backend: `curl http://backend:4444/health`
 - Cloudflare Metrics: `http://localhost:8080/metrics`
 
 ### Logs
@@ -71,7 +71,7 @@ docker-compose logs -f
 4. Configure as rotas:
    - `casadeprovision.es` → `http://frontend:80`
    - `www.casadeprovision.es` → `http://frontend:80`
-   - `api.casadeprovision.es` → `http://backend:4000`
+   - `api.casadeprovision.es` → `http://backend:4444`
 
 ## Archivos de Configuración
 
@@ -98,7 +98,7 @@ Definición de los servicios y dependencias
 
 ### API não responde
 1. Verifique se o backend está rodando
-2. Teste o health check: `curl http://localhost:4000/health`
+2. Teste o health check: `curl http://localhost:4444/health`
 3. Verifique configuración CORS en el backend
 
 ### CORS errors

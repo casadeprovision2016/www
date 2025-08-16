@@ -7,6 +7,7 @@ import LiveStreamSection from '@/components/LiveStreamSection';
 import DonationsSection from '@/components/DonationsSection';
 import ContactSection from '@/components/ContactSection';
 import MisionesSection from '@/components/MisionesSection';
+import EnseñanzasMartesSection from '@/components/EnseñanzasMartesSection';
 import Footer from '@/components/Footer';
 
 const Index = () => {
@@ -15,6 +16,7 @@ const Index = () => {
       <Header />
       <HeroSection />
       <AboutSection />
+      <EnseñanzasMartesSection />
       <CalendarSection />
       <LiveStreamSection />
       <DonationsSection />

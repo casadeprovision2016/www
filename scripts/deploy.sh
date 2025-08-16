@@ -100,7 +100,7 @@ health_check() {
     sleep 30
     
     # Verificar API
-    API_URL="http://localhost:4000"
+    API_URL="http://localhost:4444"
     if curl -f -s "$API_URL/health" > /dev/null; then
         log "✅ API está saudável"
     else
@@ -156,8 +156,8 @@ main() {
     health_check
     
     log "🎉 Deploy concluído com sucesso!"
-    log "API disponível em: http://localhost:4000"
-    log "Health check: http://localhost:4000/health"
+    log "API disponível em: http://localhost:4444"
+    log "Health check: http://localhost:4444/health"
     
     # Limpar logs antigos (manter últimos 10)
     find . -name "deploy_*.log" -type f | sort -r | tail -n +11 | xargs rm -f 2>/dev/null || true

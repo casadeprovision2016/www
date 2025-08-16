@@ -62,7 +62,7 @@ No painel do túnel criado, configure as rotas:
 
 #### Rota API (Opcional)
 - **Hostname**: `api.cccp.suaempresa.com`  
-- **Service**: `http://api:4000`
+- **Service**: `http://api:4444`
 - **Path**: `/`
 
 ### 5. Iniciar o Sistema com Cloudflare

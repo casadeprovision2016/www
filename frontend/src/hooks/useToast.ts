@@ -4,7 +4,7 @@ export const useToast = () => {
   const showSuccess = (message: string, description?: string) => {
     toast.success(message, {
       description,
-      duration: 4000,
+      duration: 4444,
     });
   };
 
@@ -18,7 +18,7 @@ export const useToast = () => {
   const showWarning = (message: string, description?: string) => {
     toast.warning(message, {
       description,
-      duration: 4000,
+      duration: 4444,
     });
   };
 

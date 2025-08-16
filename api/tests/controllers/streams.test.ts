@@ -391,7 +391,7 @@ describe('🎯 TESTES COMPLETOS - Streams Controller', () => {
     // Auth middleware dinâmico
     app.use((req: any, res, next) => {
       req.user = currentUser || {
-        id: '550e8400-e29b-41d4-a716-446655440001',
+        id: '550e8400-e29b-41d4-a716-446655444441',
         email: 'admin@test.com',
         role: 'admin'
       };
@@ -500,7 +500,7 @@ describe('🎯 TESTES COMPLETOS - Streams Controller', () => {
     
     // Reset user to admin
     currentUser = {
-      id: '550e8400-e29b-41d4-a716-446655440001',
+      id: '550e8400-e29b-41d4-a716-446655444441',
       email: 'admin@test.com',
       role: 'admin'
     };
@@ -522,7 +522,7 @@ describe('🎯 TESTES COMPLETOS - Streams Controller', () => {
     publico: true,
     senha: null,
     observacoes: null,
-    created_by: '550e8400-e29b-41d4-a716-446655440001',
+    created_by: '550e8400-e29b-41d4-a716-446655444441',
     created_at: '2025-01-24T10:00:00.000Z',
     updated_at: '2025-01-24T10:00:00.000Z'
   };
@@ -713,7 +713,7 @@ describe('🎯 TESTES COMPLETOS - Streams Controller', () => {
       
       // Mock para verificação de permissão
       mockSupabase.single.mockResolvedValueOnce({
-        data: { created_by: '550e8400-e29b-41d4-a716-446655440001' },
+        data: { created_by: '550e8400-e29b-41d4-a716-446655444441' },
         error: null
       });
 
@@ -750,7 +750,7 @@ describe('🎯 TESTES COMPLETOS - Streams Controller', () => {
       
       // Mock para verificação de permissão
       mockSupabase.single.mockResolvedValue({
-        data: { created_by: '550e8400-e29b-41d4-a716-446655440001' },
+        data: { created_by: '550e8400-e29b-41d4-a716-446655444441' },
         error: null
       });
 

@@ -15,7 +15,7 @@ export const authenticateToken = async (
 ): Promise<void> => {
   // BYPASS TEMPORÁRIO PARA TESTES - REMOVER EM PRODUÇÃO
   console.log('🔓 Auth middleware bypassed for testing');
-  (req as any).user = { id: '550e8400-e29b-41d4-a716-446655440001', role: 'admin' };
+  (req as any).user = { id: '550e8400-e29b-41d4-a716-446655444441', role: 'admin' };
   next();
   return;
   

@@ -4,9 +4,9 @@
 
 # Configurações de entrada (ingress rules)
 ingress:
-  # Rota para API - api.casadeprovision.es -> backend:4000
+  # Rota para API - api.casadeprovision.es -> backend:4444
   - hostname: api.casadeprovision.es
-    service: http://backend:4000
+    service: http://backend:4444
     originRequest:
       httpHostHeader: api.casadeprovision.es
       connectTimeout: 30s

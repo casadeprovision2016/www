@@ -583,7 +583,7 @@ describe('🎯 DONATIONS CONTROLLER - TODOS OS TESTES', () => {
         total: 100,
         total_amount: 50000.00,
         monthly: { current: 20, current_amount: 10000.00 },
-        by_type: { dizimo: 40000.00, oferta: 10000.00 }
+        by_type: { dizimo: 44440.00, oferta: 10000.00 }
       };
 
       mockCacheService.get.mockResolvedValue(cachedStats);

@@ -41,7 +41,7 @@ The system centers around a `users` table connected to:
 
 According to the README, when implemented:
 - **Frontend**: `npm run dev` (Vite dev server on port 3000)
-- **Backend**: `npm run dev` (Express server on port 4000)
+- **Backend**: `npm run dev` (Express server on port 4444)
 - **Full stack**: `docker-compose up -d` (complete Docker deployment)
 - **Health check**: `bash scripts/health-check.sh`
 - **Deploy**: `bash scripts/deploy.sh`

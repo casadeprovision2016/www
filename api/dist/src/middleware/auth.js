@@ -6,7 +6,7 @@ const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, proce
 const authenticateToken = async (req, res, next) => {
     // BYPASS TEMPORÁRIO PARA TESTES - REMOVER EM PRODUÇÃO
     console.log('🔓 Auth middleware bypassed for testing');
-    req.user = { id: '550e8400-e29b-41d4-a716-446655440001', role: 'admin' };
+    req.user = { id: '550e8400-e29b-41d4-a716-446655444441', role: 'admin' };
     next();
     return;
     const authHeader = req.headers.authorization;

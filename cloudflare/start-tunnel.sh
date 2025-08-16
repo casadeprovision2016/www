@@ -37,7 +37,7 @@ if ! wget --quiet --tries=1 --timeout=5 --spider http://frontend:80/health; then
 fi
 
 # Verificar backend
-if ! wget --quiet --tries=1 --timeout=5 --spider http://backend:4000/health; then
+if ! wget --quiet --tries=1 --timeout=5 --spider http://backend:4444/health; then
     echo "⚠️  Aviso: Backend não está respondendo, continuando..."
 fi
 

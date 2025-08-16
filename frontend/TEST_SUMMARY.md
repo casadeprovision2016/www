@@ -133,12 +133,12 @@ npx vitest run src/test/Login.basic.test.tsx
 ## Docker Integration
 ✅ **Services Running**: The Docker containers for frontend, backend, and Redis are running and accessible:
 - Frontend: http://localhost:3000
-- Backend API: http://localhost:4000
+- Backend API: http://localhost:4444
 - API Health Check: ✅ Confirmed working
 
 ## API Configuration
 - **Production API**: `https://api.casadeprovision.es`
-- **Local API**: `http://localhost:4000` 
+- **Local API**: `http://localhost:4444` 
 - **Tests**: Mock API calls for controlled testing
 
 ## Test Results Summary

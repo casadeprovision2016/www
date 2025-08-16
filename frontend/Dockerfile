@@ -97,7 +97,7 @@ http {
         
         # API proxy para evitar CORS em desenvolvimento
         location /api/ {
-            proxy_pass http://backend:4000/api/;
+            proxy_pass http://backend:4444/api/;
             proxy_set_header Host \$host;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
@@ -109,7 +109,7 @@ http {
         
         # Proxy para health check do backend
         location /api/health {
-            proxy_pass http://backend:4000/health;
+            proxy_pass http://backend:4444/health;
             proxy_set_header Host \$host;
             proxy_set_header X-Real-IP \$remote_addr;
             proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;

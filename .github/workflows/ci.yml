@@ -113,26 +113,28 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 18
+      - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
       - name: Install deps
         run: npm ci
-      - name: Deploy preview (opennext/wrangler)
-        env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-        run: |
-          # Try npm script first, fallback to opennext CLI
-          if npm run preview --if-present; then
-            echo "preview deployed via npm script"
-          else
-            npx opennextjs-cloudflare upload --preview || npx wrangler publish --env preview
-          fi
-      - name: Publish preview URL
-        run: echo "PREVIEW_URL=__TODO__" && echo "Preview deployed (replace with real preview URL retrieval)"
+      
+      # Baixa o build feito no job anterior para não buildar de novo
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: open-next-artifacts
+          path: .open-next
 
+      - name: Deploy to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          # Não use 'preview'. Use 'deploy' para enviar para a nuvem.
+          npx wrangler deploy --env preview
+          
   smoke-tests:
     name: Smoke tests against preview
     runs-on: ubuntu-latest
@@ -159,7 +161,7 @@ jobs:
         run: npm ci
       - name: Deploy to production (mcp/wrangler)
         env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}

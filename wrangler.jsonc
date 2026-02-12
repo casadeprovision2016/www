@@ -11,6 +11,9 @@
 		"nodejs_compat",
 		"global_fetch_strictly_public"
 	],
+	"build": {
+		"command": "npm run build:worker"
+	},
 	"assets": {
 		"binding": "ASSETS",
 		"directory": ".open-next/assets"

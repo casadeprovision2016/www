@@ -1,6 +1,6 @@
 -- D1 initial schema
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
@@ -10,14 +10,14 @@ CREATE TABLE users (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   expires_at TEXT NOT NULL,
   created_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE TABLE members (
+CREATE TABLE IF NOT EXISTS members (
   id TEXT PRIMARY KEY,
   full_name TEXT NOT NULL,
   email TEXT,
@@ -32,7 +32,7 @@ CREATE TABLE members (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE TABLE visitors (
+CREATE TABLE IF NOT EXISTS visitors (
   id TEXT PRIMARY KEY,
   full_name TEXT NOT NULL,
   email TEXT,
@@ -47,7 +47,7 @@ CREATE TABLE visitors (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
@@ -63,7 +63,7 @@ CREATE TABLE events (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE TABLE ministries (
+CREATE TABLE IF NOT EXISTS ministries (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
@@ -74,7 +74,7 @@ CREATE TABLE ministries (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE TABLE ministry_members (
+CREATE TABLE IF NOT EXISTS ministry_members (
   ministry_id TEXT REFERENCES ministries(id) ON DELETE CASCADE,
   member_id TEXT REFERENCES members(id) ON DELETE CASCADE,
   joined_date TEXT DEFAULT (date('now')),
@@ -82,7 +82,7 @@ CREATE TABLE ministry_members (
   PRIMARY KEY (ministry_id, member_id)
 );
 
-CREATE TABLE donations (
+CREATE TABLE IF NOT EXISTS donations (
   id TEXT PRIMARY KEY,
   donor_name TEXT,
   amount REAL NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE donations (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE TABLE pastoral_visits (
+CREATE TABLE IF NOT EXISTS pastoral_visits (
   id TEXT PRIMARY KEY,
   member_id TEXT REFERENCES members(id),
   visitor_id TEXT REFERENCES visitors(id),
@@ -111,7 +111,7 @@ CREATE TABLE pastoral_visits (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE TABLE streams (
+CREATE TABLE IF NOT EXISTS streams (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
   description TEXT,
@@ -125,10 +125,10 @@ CREATE TABLE streams (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_members_birth_date ON members(birth_date);
-CREATE INDEX idx_events_date ON events(event_date);
-CREATE INDEX idx_donations_date ON donations(donation_date);
-CREATE INDEX idx_pastoral_visits_date ON pastoral_visits(visit_date);
-CREATE INDEX idx_streams_scheduled_date ON streams(scheduled_date);
-CREATE INDEX idx_sessions_user ON sessions(user_id);
-CREATE INDEX idx_sessions_expires ON sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_members_birth_date ON members(birth_date);
+CREATE INDEX IF NOT EXISTS idx_events_date ON events(event_date);
+CREATE INDEX IF NOT EXISTS idx_donations_date ON donations(donation_date);
+CREATE INDEX IF NOT EXISTS idx_pastoral_visits_date ON pastoral_visits(visit_date);
+CREATE INDEX IF NOT EXISTS idx_streams_scheduled_date ON streams(scheduled_date);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);

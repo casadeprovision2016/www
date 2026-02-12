@@ -1,5 +1,3 @@
-export const runtime = "edge"
-
 import { Providers } from '@/components/providers'
 
 export default function DashboardLayout({

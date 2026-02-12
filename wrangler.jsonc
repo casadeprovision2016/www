@@ -37,6 +37,14 @@
 	"vars": {
 		"JWT_SECRET": "your-secret-key-here"
 	},
+	"env": {
+		"preview": {
+			"name": "www-preview",
+			"vars": {
+				"JWT_SECRET": "your-preview-secret-key-here"
+			}
+		}
+	},
 	"observability": {
 		"enabled": true
 	}

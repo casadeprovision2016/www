@@ -10,8 +10,7 @@
 		"deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
 		"upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
 		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-		"cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts",
-		"test": "vitest"
+		"cf-typegen": "wrangler types --env-interface CloudflareEnv ./cloudflare-env.d.ts"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^5.2.2",
@@ -70,17 +69,17 @@
 	"devDependencies": {
 		"@eslint/eslintrc": "^3",
 		"@tailwindcss/postcss": "^4",
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/react": "^16.3.2",
 		"@types/node": "^20.19.33",
 		"@types/react": "^19.1.5",
 		"@types/react-dom": "^19.1.5",
 		"eslint": "^9",
 		"eslint-config-next": "15.4.6",
+		"jsdom": "^28.0.0",
 		"tailwindcss": "^4",
 		"typescript": "^5.7.4",
-		"wrangler": "^4.64.0",
-		"vitest": "^1.1.9",
-		"@testing-library/react": "^14.0.0",
-		"@testing-library/jest-dom": "^6.0.0",
-		"jsdom": "^22.0.0"
+		"vitest": "^4.0.18",
+		"wrangler": "^4.64.0"
 	}
 }

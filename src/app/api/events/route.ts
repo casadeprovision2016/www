@@ -1,22 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDB } from '@/lib/db/client'
+import { getSession } from '@/lib/auth/session'
 import { nanoid } from 'nanoid'
-
-type EventInsertPayload = {
-  title?: string
-  description?: string | null
-  event_date?: string
-  end_date?: string | null
-  location?: string | null
-  event_type?: string | null
-  image_url?: string | null
-  status?: string
-  follow_up_needed?: boolean
-  created_by?: string | null
-}
+import { EventInsertSchema } from '@/lib/validation/schemas'
+import { sanitizeObject } from '@/lib/validation/sanitize'
+import { apiRateLimit } from '@/lib/rate-limit'
 
 // Public endpoint - no auth required
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = apiRateLimit(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
+
   const db = await getDB()
   const { results } = await db
     .prepare(`
@@ -29,7 +26,41 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const data = (await request.json()) as EventInsertPayload
+  // Apply rate limiting
+  const rateLimitResult = apiRateLimit(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
+
+  // Add auth check - requires admin/leader role
+  const session = await getSession()
+  if (!session || !['admin', 'leader'].includes(session.role)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
+
+  // Sanitize input
+  const sanitizedBody = sanitizeObject(body)
+
+  // Validate input
+  const validationResult = EventInsertSchema.safeParse(sanitizedBody)
+  if (!validationResult.success) {
+    return NextResponse.json(
+      {
+        error: 'Invalid input',
+        details: validationResult.error.issues.map((issue) => ({ field: issue.path.join('.'), message: issue.message })),
+      },
+      { status: 400 }
+    )
+  }
+
+  const data = validationResult.data
   const db = await getDB()
 
   const id = nanoid()
@@ -46,16 +77,16 @@ export async function POST(request: NextRequest) {
     `)
     .bind(
       id,
-      data.title,
-      data.description || null,
+      data.title?.trim(),
+      data.description?.trim() || null,
       data.event_date,
       data.end_date || null,
-      data.location || null,
-      data.event_type || null,
+      data.location?.trim() || null,
+      data.event_type?.trim() || null,
       data.image_url || null,
       data.status || 'scheduled',
       data.follow_up_needed ? 1 : 0,
-      data.created_by || null,
+      session.userId,
       now,
       now
     )

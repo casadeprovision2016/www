@@ -2,20 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDB } from '@/lib/db/client'
 import { getSession } from '@/lib/auth/session'
 import { nanoid } from 'nanoid'
+import { MemberInsertSchema } from '@/lib/validation/schemas'
+import { sanitizeObject } from '@/lib/validation/sanitize'
+import { apiRateLimit } from '@/lib/rate-limit'
 
-type MemberInsertPayload = {
-  full_name?: string
-  email?: string | null
-  phone?: string | null
-  address?: string | null
-  birth_date?: string | null
-  baptism_date?: string | null
-  membership_date?: string | null
-  status?: string | null
-  notes?: string | null
-}
+export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = apiRateLimit(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
 
-export async function GET() {
   const session = await getSession()
   if (!session || !['admin', 'leader'].includes(session.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -30,12 +27,40 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = apiRateLimit(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
+
   const session = await getSession()
   if (!session || !['admin', 'leader'].includes(session.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const data = (await request.json()) as MemberInsertPayload
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
+
+  // Sanitize input
+  const sanitizedBody = sanitizeObject(body)
+
+  // Validate input
+  const validationResult = MemberInsertSchema.safeParse(sanitizedBody)
+  if (!validationResult.success) {
+    return NextResponse.json(
+      {
+        error: 'Invalid input',
+        details: validationResult.error.issues.map((issue) => ({ field: issue.path.join('.'), message: issue.message })),
+      },
+      { status: 400 }
+    )
+  }
+
+  const data = validationResult.data
   const db = await getDB()
 
   const id = nanoid()
@@ -44,23 +69,23 @@ export async function POST(request: NextRequest) {
   await db
     .prepare(`
       INSERT INTO members (
-        id, full_name, email, phone, address, birth_date, 
-        baptism_date, membership_date, status, notes, 
+        id, full_name, email, phone, address, birth_date,
+        baptism_date, membership_date, status, notes,
         created_at, updated_at
       )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `)
     .bind(
       id,
-      data.full_name,
-      data.email || null,
-      data.phone || null,
-      data.address || null,
+      data.full_name?.trim(),
+      data.email?.toLowerCase().trim() || null,
+      data.phone?.trim() || null,
+      data.address?.trim() || null,
       data.birth_date || null,
       data.baptism_date || null,
       data.membership_date || null,
       data.status || 'active',
-      data.notes || null,
+      data.notes?.trim() || null,
       now,
       now
     )

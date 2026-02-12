@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDB } from '@/lib/db/client'
 import { getSession } from '@/lib/auth/session'
 import { nanoid } from 'nanoid'
+import { MinistryInsertSchema } from '@/lib/validation/schemas'
+import { sanitizeObject } from '@/lib/validation/sanitize'
+import { apiRateLimit } from '@/lib/rate-limit'
 
-type MinistryInsertPayload = {
-  name?: string
-  description?: string | null
-  leader_id?: string | null
-  meeting_schedule?: string | null
-  status?: string | null
-}
+export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = apiRateLimit(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
 
-export async function GET() {
   const session = await getSession()
   if (!session || !['admin', 'leader'].includes(session.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -26,12 +27,40 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = apiRateLimit(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
+
   const session = await getSession()
   if (!session || !['admin', 'leader'].includes(session.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const data = (await request.json()) as MinistryInsertPayload
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
+
+  // Sanitize input
+  const sanitizedBody = sanitizeObject(body)
+
+  // Validate input
+  const validationResult = MinistryInsertSchema.safeParse(sanitizedBody)
+  if (!validationResult.success) {
+    return NextResponse.json(
+      {
+        error: 'Invalid input',
+        details: validationResult.error.issues.map((issue) => ({ field: issue.path.join('.'), message: issue.message })),
+      },
+      { status: 400 }
+    )
+  }
+
+  const data = validationResult.data
   const db = await getDB()
 
   const id = nanoid()
@@ -47,10 +76,10 @@ export async function POST(request: NextRequest) {
     `)
     .bind(
       id,
-      data.name,
-      data.description || null,
+      data.name?.trim(),
+      data.description?.trim() || null,
       data.leader_id || null,
-      data.meeting_schedule || null,
+      data.meeting_schedule?.trim() || null,
       data.status || 'active',
       now,
       now

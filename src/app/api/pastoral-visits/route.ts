@@ -2,19 +2,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDB } from '@/lib/db/client'
 import { getSession } from '@/lib/auth/session'
 import { nanoid } from 'nanoid'
+import { PastoralVisitInsertSchema } from '@/lib/validation/schemas'
+import { sanitizeObject } from '@/lib/validation/sanitize'
+import { apiRateLimit } from '@/lib/rate-limit'
 
-type PastoralVisitInsertPayload = {
-  member_id?: string | null
-  visitor_id?: string | null
-  visit_date?: string
-  visit_type?: string | null
-  pastor_id?: string | null
-  notes?: string | null
-  follow_up_needed?: boolean
-  status?: string | null
-}
+export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = apiRateLimit(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
 
-export async function GET() {
   const session = await getSession()
   if (!session || !['admin', 'leader'].includes(session.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -29,12 +27,40 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = apiRateLimit(request)
+  if (rateLimitResult) {
+    return rateLimitResult
+  }
+
   const session = await getSession()
   if (!session || !['admin', 'leader'].includes(session.role)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const data = (await request.json()) as PastoralVisitInsertPayload
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
+
+  // Sanitize input
+  const sanitizedBody = sanitizeObject(body)
+
+  // Validate input
+  const validationResult = PastoralVisitInsertSchema.safeParse(sanitizedBody)
+  if (!validationResult.success) {
+    return NextResponse.json(
+      {
+        error: 'Invalid input',
+        details: validationResult.error.issues.map((issue) => ({ field: issue.path.join('.'), message: issue.message })),
+      },
+      { status: 400 }
+    )
+  }
+
+  const data = validationResult.data
   const db = await getDB()
 
   const id = nanoid()
@@ -56,7 +82,7 @@ export async function POST(request: NextRequest) {
       data.visit_date,
       data.visit_type || null,
       data.pastor_id || session.userId,
-      data.notes || null,
+      data.notes?.trim() || null,
       data.follow_up_needed ? 1 : 0,
       data.status || 'scheduled',
       now,

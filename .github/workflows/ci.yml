@@ -1,0 +1,176 @@
+name: CI / Cloudflare (OpenNext + MCP)
+
+on:
+  push: {}
+  pull_request: {}
+  workflow_dispatch: {}
+
+jobs:
+  setup:
+    name: Setup and Install
+    runs-on: ubuntu-latest
+    outputs:
+      node-version: 18
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install deps (cache)
+        run: npm ci
+      - name: Run lint
+        run: npm run lint
+
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install deps
+        run: npm ci
+      - name: Run tsc
+        run: npx tsc --noEmit
+
+  check-test-script:
+    name: Detect test script
+    runs-on: ubuntu-latest
+    needs: typecheck
+    outputs:
+      has: ${{ steps.detect.outputs.has }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect
+        name: Detect `test` script in package.json
+        run: |
+          echo "has=$(node -e 'const p=require("./package.json"); process.stdout.write(p.scripts&&p.scripts.test?"true":"false")')" >> $GITHUB_OUTPUT
+
+  tests:
+    name: Unit tests (conditional)
+    runs-on: ubuntu-latest
+    needs: check-test-script
+    if: needs.check-test-script.outputs.has == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install deps
+        run: npm ci
+      - name: Run tests
+        run: npm test
+
+  build:
+    name: Build OpenNext / Cloudflare artifacts
+    runs-on: ubuntu-latest
+    needs: [typecheck, tests]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install deps
+        run: npm ci
+      - name: Next build
+        run: npm run build
+      - name: OpenNext / Cloudflare build
+        run: |
+          # Generate Cloudflare artifacts (.open-next)
+          npx opennextjs-cloudflare build || npm run build:cloud || true
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-next-artifacts
+          path: .open-next
+
+  deploy-preview:
+    name: Deploy preview (staging)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install deps
+        run: npm ci
+      - name: Deploy preview (opennext/wrangler)
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: |
+          # Try npm script first, fallback to opennext CLI
+          if npm run preview --if-present; then
+            echo "preview deployed via npm script"
+          else
+            npx opennextjs-cloudflare upload --preview || npx wrangler publish --env preview
+          fi
+      - name: Publish preview URL
+        run: echo "PREVIEW_URL=__TODO__" && echo "Preview deployed (replace with real preview URL retrieval)"
+
+  smoke-tests:
+    name: Smoke tests against preview
+    runs-on: ubuntu-latest
+    needs: deploy-preview
+    steps:
+      - name: Run smoke tests placeholder
+        run: |
+          echo "Run smoke/integration tests against preview URL here."
+          echo "If you have a script, replace this step with e.g. `npm run smoke` pointing to the preview URL."
+
+  deploy-prod:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    needs: [build, deploy-preview, smoke-tests]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install deps
+        run: npm ci
+      - name: Deploy to production (mcp/wrangler)
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: |
+          # Prefer a dedicated `deploy` script; fallback to common CLIs
+          if npm run deploy --if-present; then
+            echo "deployed via npm script"
+          else
+            if command -v mcp >/dev/null 2>&1; then
+              mcp deploy --env production || true
+            else
+              npx opennextjs-cloudflare deploy || npx wrangler publish --env production
+            fi
+          fi

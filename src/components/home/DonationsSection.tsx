@@ -1,20 +1,9 @@
-'use client'
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card';
-import { Button } from '@/components/button';
-import { Heart, CreditCard, Building, Shield, Gift, Copy } from 'lucide-react';
-import { useState } from 'react';
+import { Heart, CreditCard, Building, Shield, Gift } from 'lucide-react';
 import Image from 'next/image';
+import CopyToClipboardButton from '@/components/home/CopyToClipboardButton';
 
 const DonationsSection = () => {
-  const [copied, setCopied] = useState('');
-
-  const copyToClipboard = (text: string, type: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(type);
-    setTimeout(() => setCopied(''), 2000);
-  };
-
   return (
     <section id="donaciones" className="py-20 bg-church-warm-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -81,37 +70,21 @@ const DonationsSection = () => {
                 <div className="bg-gray-100 p-4 rounded-lg">
                   <div className="flex justify-between items-center mb-2">
                     <p className="font-semibold text-gray-700">IBAN:</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard('ES1021001419020200597614', 'iban')}
-                      className="p-1"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
+                    <CopyToClipboardButton text="ES1021001419020200597614" />
                   </div>
                   <p className="font-mono text-lg text-church-blue-dark break-all">
                     ES1021001419020200597614
                   </p>
-                  {copied === 'iban' && <p className="text-green-600 text-sm mt-1">¡Copiado!</p>}
                 </div>
                 
                 <div className="bg-gray-100 p-4 rounded-lg">
                   <div className="flex justify-between items-center mb-2">
                     <p className="font-semibold text-gray-700">BIC/SWIFT:</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard('CAIXESBBXXX', 'bic')}
-                      className="p-1"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
+                    <CopyToClipboardButton text="CAIXESBBXXX" />
                   </div>
                   <p className="font-mono text-lg text-church-blue-dark">
                     CAIXESBBXXX
                   </p>
-                  {copied === 'bic' && <p className="text-green-600 text-sm mt-1">¡Copiado!</p>}
                 </div>
 
                 <div className="text-center">

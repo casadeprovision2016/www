@@ -1,5 +1,3 @@
-'use client'
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card';
 import { Button } from '@/components/button';
 import { MapPin, Phone, Mail, Clock, MessageSquare } from 'lucide-react';
@@ -39,10 +37,8 @@ const ContactSection = () => {
     }
   ];
 
-  const handleWhatsApp = () => {
-    const message = encodeURIComponent("Hola, me gustaría obtener más información sobre Centro Cristiano Casa de Provisión.");
-    window.open(`https://wa.me/34627108730?text=${message}`, '_blank');
-  };
+  const whatsappMessage = encodeURIComponent("Hola, me gustaría obtener más información sobre Centro Cristiano Casa de Provisión.");
+  const whatsappUrl = `https://wa.me/34627108730?text=${whatsappMessage}`;
 
   return (
     <section id="contacto" className="py-20 bg-gray-50">
@@ -91,13 +87,15 @@ const ContactSection = () => {
                     <h4 className="text-xl font-bold mb-2">¿Necesitas ayuda inmediata?</h4>
                     <p className="text-green-100">Contáctanos por WhatsApp para una respuesta rápida</p>
                   </div>
-                  <Button 
-                    onClick={handleWhatsApp}
+                  <Button
+                    asChild
                     className="bg-white text-green-600 hover:bg-green-50 font-semibold"
                     size="lg"
                   >
-                    <MessageSquare className="mr-2 h-5 w-5" />
-                    WhatsApp
+                    <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                      <MessageSquare className="mr-2 h-5 w-5" />
+                      WhatsApp
+                    </a>
                   </Button>
                 </div>
               </CardContent>
@@ -135,12 +133,14 @@ const ContactSection = () => {
                 <p className="text-gray-700 mb-4">
                   Ven y forma parte de nuestra familia en Cristo. Todos son bienvenidos.
                 </p>
-                <Button 
+                <Button
+                  asChild
                   className="bg-church-gold hover:bg-church-gold-dark text-white font-semibold"
-                  onClick={handleWhatsApp}
                 >
-                  <Phone className="mr-2 h-4 w-4" />
-                  Contactar Ahora
+                  <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                    <Phone className="mr-2 h-4 w-4" />
+                    Contactar Ahora
+                  </a>
                 </Button>
               </CardContent>
             </Card>

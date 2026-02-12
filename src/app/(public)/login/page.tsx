@@ -7,7 +7,6 @@ import { Input } from '@/components/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card'
 import { Label } from '@/components/label'
 import { useAuth } from '@/hooks/use-auth'
-import { useToast } from '@/hooks/use-toast'
 import { LogIn, Eye, EyeOff } from 'lucide-react'
 import Image from 'next/image'
 
@@ -18,7 +17,6 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const { signIn, isAuthenticated } = useAuth()
-  const { toast } = useToast()
   const router = useRouter()
 
   useEffect(() => {
@@ -40,11 +38,7 @@ export default function LoginPage() {
         router.push('/panel')
       }
     } catch {
-      toast({
-        title: 'Error',
-        description: 'Credenciales incorrectas',
-        variant: 'destructive',
-      })
+      setError('Credenciales incorrectas')
     } finally {
       setIsLoading(false)
     }

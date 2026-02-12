@@ -1,5 +1,3 @@
-'use client'
-
 import { Card, CardContent } from '@/components/card'
 import { Button } from '@/components/button'
 import { Play, Video, Youtube } from 'lucide-react'
@@ -55,22 +53,26 @@ export default function LiveStreamSection({ streams }: LiveStreamSectionProps) {
                     Únete a nuestro culto dominical en vivo cada domingo a las 9:00 AM
                   </p>
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <Button 
-                      size="lg" 
+                    <Button
+                      asChild
+                      size="lg"
                       className="bg-church-gold hover:bg-church-gold-dark text-white font-semibold"
-                      onClick={() => window.open('https://www.youtube.com/channel/UCiZGj9wHkU6X4XBjZZ5VoFg', '_blank')}
                     >
-                      <Play className="mr-2 h-5 w-5" />
-                      Ver Transmisión
+                      <a href="https://www.youtube.com/channel/UCiZGj9wHkU6X4XBjZZ5VoFg" target="_blank" rel="noopener noreferrer">
+                        <Play className="mr-2 h-5 w-5" />
+                        Ver Transmisión
+                      </a>
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      asChild
+                      variant="outline"
                       size="lg"
                       className="border-white text-white hover:bg-white hover:text-church-blue"
-                      onClick={() => window.open('https://www.youtube.com/@cc.casadeprovision', '_blank')}
                     >
-                      <Youtube className="mr-2 h-5 w-5" />
-                      Canal de YouTube
+                      <a href="https://www.youtube.com/@cc.casadeprovision" target="_blank" rel="noopener noreferrer">
+                        <Youtube className="mr-2 h-5 w-5" />
+                        Canal de YouTube
+                      </a>
                     </Button>
                   </div>
                 </div>

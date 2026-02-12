@@ -1,9 +1,11 @@
 export const runtime = "edge"
 
+import { Providers } from '@/components/providers'
+
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return <>{children}</>
+  return <Providers>{children}</Providers>
 }

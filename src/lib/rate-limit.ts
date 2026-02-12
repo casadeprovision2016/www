@@ -49,7 +49,6 @@ export function rateLimit(
 ): { success: boolean; limit: number; remaining: number; resetTime: number } {
   const identifier = getClientIdentifier(request)
   const now = Date.now()
-  const windowStart = now - config.windowMs
 
   // Clean up old entries periodically
   if (Math.random() < 0.01) {

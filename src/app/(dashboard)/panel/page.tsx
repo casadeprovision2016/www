@@ -6,17 +6,19 @@ import { Button } from '@/components/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/card'
 import { useAuth } from '@/hooks/use-auth'
 import { LogOut, Calendar, Users, Settings, Home, Video, DollarSign, UserPlus, User } from 'lucide-react'
-import EventsManager from '@/components/panel/EventsManager'
-import MembersManager from '@/components/panel/MembersManager'
-import MinistriesManager from '@/components/panel/MinistriesManager'
-import StreamsManager from '@/components/panel/StreamsManager'
-import DonationsManager from '@/components/panel/DonationsManager'
-import VisitorsManager from '@/components/panel/VisitorsManager'
-import PastoralVisitsManager from '@/components/panel/PastoralVisitsManager'
-import BirthdaysList from '@/components/panel/BirthdaysList'
-import FollowUpWidget from '@/components/panel/FollowUpWidget'
-import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import { useDashboardStats } from '@/lib/queries/dashboard'
+
+const EventsManager = dynamic(() => import('@/components/panel/EventsManager'))
+const MembersManager = dynamic(() => import('@/components/panel/MembersManager'))
+const MinistriesManager = dynamic(() => import('@/components/panel/MinistriesManager'))
+const StreamsManager = dynamic(() => import('@/components/panel/StreamsManager'))
+const DonationsManager = dynamic(() => import('@/components/panel/DonationsManager'))
+const VisitorsManager = dynamic(() => import('@/components/panel/VisitorsManager'))
+const PastoralVisitsManager = dynamic(() => import('@/components/panel/PastoralVisitsManager'))
+const BirthdaysList = dynamic(() => import('@/components/panel/BirthdaysList'))
+const FollowUpWidget = dynamic(() => import('@/components/panel/FollowUpWidget'))
+import Image from 'next/image'
 
 export default function PanelPage() {
   const { profile, signOut, loading } = useAuth()

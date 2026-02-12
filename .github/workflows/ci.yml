@@ -37,10 +37,11 @@ jobs:
       - name: Run tests
         run: npm test || echo "No tests to run"
 
-  build:
-    name: Build Artifacts
+  deploy-preview:
+    name: Build & Deploy Preview
     runs-on: ubuntu-latest
     needs: check
+    if: github.event_name == 'pull_request'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -58,82 +59,43 @@ jobs:
         run: |
           npx wrangler d1 execute www-db --local --file=./migrations/0001_initial_schema.sql
           
-      - name: OpenNext / Cloudflare build
-        env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET || 'dummy-secret-for-build' }}
-        run: npx opennextjs-cloudflare build
-        
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: open-next-artifacts
-          path: |
-            .open-next
-            wrangler.jsonc
-            package.json
-            package-lock.json
-
-  deploy-preview:
-    name: Deploy Preview
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: open-next-artifacts
-
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies (needed for wrangler)
-        run: npm ci
-
-      - name: Deploy preview to Cloudflare
+      - name: Build & Deploy Preview
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'dummy-secret-for-build' }}
         run: |
+          npx opennextjs-cloudflare build
           npx wrangler deploy --env preview
-      - name: Publish preview message
-        run: |
-          echo "Preview deployed to staging environment."
 
   deploy-prod:
-    name: Deploy to Production
+    name: Build & Deploy Production
     runs-on: ubuntu-latest
-    needs: build
+    needs: check
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: production
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: open-next-artifacts
-
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies (needed for opennextjs-cloudflare)
+      - name: Install dependencies
         run: npm ci
 
-      - name: Deploy to production
+      - name: Initialize local D1 for build
+        run: |
+          npx wrangler d1 execute www-db --local --file=./migrations/0001_initial_schema.sql
+
+      - name: Build & Deploy Production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
+          npx opennextjs-cloudflare build
           npx opennextjs-cloudflare deploy

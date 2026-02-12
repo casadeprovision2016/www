@@ -31,35 +31,54 @@ type PublicStream = {
 }
 
 export default async function Home() {
-  const db = await getDB()
+  let events: PublicEvent[] = []
+  let streams: PublicStream[] = []
 
-  // Buscar próximos eventos (scheduled ou ongoing)
-  const { results: events } = await db
-    .prepare(`
-      SELECT * FROM events 
-      WHERE status IN ('scheduled', 'ongoing')
-      ORDER BY event_date ASC
-      LIMIT 6
-    `)
-    .all<PublicEvent>()
+  try {
+    const db = await getDB()
 
-  // Buscar próximas transmisiones (scheduled o live)
-  const { results: streams } = await db
-    .prepare(`
-      SELECT * FROM streams 
-      WHERE status IN ('scheduled', 'live')
-      ORDER BY scheduled_date ASC
-      LIMIT 3
-    `)
-    .all<PublicStream>()
+    // Buscar próximos eventos (scheduled ou ongoing)
+    const eventsResult = await db
+      .prepare(`
+        SELECT * FROM events 
+        WHERE status IN ('scheduled', 'ongoing')
+        ORDER BY event_date ASC
+        LIMIT 6
+      `)
+      .all<PublicEvent>()
+    events = eventsResult.results || []
+
+    // Buscar próximas transmisiones (scheduled o live)
+    const streamsResult = await db
+      .prepare(`
+        SELECT * FROM streams 
+        WHERE status IN ('scheduled', 'live')
+        ORDER BY scheduled_date ASC
+        LIMIT 3
+      `)
+      .all<PublicStream>()
+    streams = streamsResult.results || []
+  } catch (error) {
+    // Handle build-time database errors (e.g., missing tables during initial build)
+    // This allows the page to render with empty data while migrations are pending
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    
+    if (errorMsg.includes('no such table') || errorMsg.includes('SQLITE_ERROR')) {
+      console.warn('[Homepage] Database tables not yet initialized. Rendering with empty data. Run migrations to populate events and streams.')
+    } else {
+      // Re-throw unexpected errors
+      console.error('[Homepage] Database error:', error)
+      throw error
+    }
+  }
 
   return (
     <div className="min-h-screen">
       <Header />
       <HeroSection />
       <AboutSection />
-      <CalendarSection events={events || []} />
-      <LiveStreamSection streams={streams || []} />
+      <CalendarSection events={events} />
+      <LiveStreamSection streams={streams} />
       <DonationsSection />
       <ContactSection />
       <MisionesSection />

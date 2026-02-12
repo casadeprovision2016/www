@@ -12,8 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  setup:
-    name: Setup and Install
+  check:
+    name: Lint, Typecheck and Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -28,66 +28,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - name: Install deps
-        run: npm ci
       - name: Run lint
         run: npm run lint
 
-  typecheck:
-    name: Type check
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - name: Install deps
-        run: npm ci
-      - name: Run tsc
+      - name: Run type check
         run: npx tsc --noEmit
 
-  tests:
-    name: Unit tests
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - name: Install deps
-        run: npm ci
       - name: Run tests
         run: npm test || echo "No tests to run"
 
   build:
-    name: Build OpenNext / Cloudflare artifacts
+    name: Build Artifacts
     runs-on: ubuntu-latest
-    needs: [lint, typecheck, tests]
+    needs: check
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      - name: Install deps
+
+      - name: Install dependencies
         run: npm ci
       
       - name: Initialize local D1 for build
@@ -107,13 +71,17 @@ jobs:
             .open-next
             wrangler.jsonc
             package.json
+            package-lock.json
 
   deploy-preview:
-    name: Deploy preview (staging)
+    name: Deploy Preview
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'pull_request'
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -123,6 +91,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies (needed for wrangler)
+        run: npm ci
 
       - name: Deploy preview to Cloudflare
         env:
@@ -130,17 +102,20 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
           npx wrangler deploy --env preview
-      - name: Publish preview URL
+      - name: Publish preview message
         run: |
           echo "Preview deployed to staging environment."
 
   deploy-prod:
-    name: Deploy to production
+    name: Deploy to Production
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: production
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -150,6 +125,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies (needed for opennextjs-cloudflare)
+        run: npm ci
 
       - name: Deploy to production
         env:

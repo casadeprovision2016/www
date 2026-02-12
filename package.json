@@ -8,6 +8,8 @@
 		"build:worker": "opennextjs-cloudflare build",
 		"start": "next start",
 		"lint": "eslint .",
+		"d1:migrate": "wrangler d1 execute www-db --file=./migrations/0001_initial_schema.sql",
+		"d1:migrate:local": "wrangler d1 execute www-db --local --file=./migrations/0001_initial_schema.sql",
 		"deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
 		"upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
 		"preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",

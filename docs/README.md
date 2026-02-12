@@ -65,7 +65,7 @@ pnpm add -D @types/bcryptjs
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "ccp-c3-db",
+      "database_name": "www-db",
       "database_id": "YOUR_DATABASE_ID"
     }
   ],
@@ -78,7 +78,7 @@ pnpm add -D @types/bcryptjs
 #### 1.3 Criar Database D1
 ```bash
 # Criar o database
-pnpm wrangler d1 create ccp-c3-db
+pnpm wrangler d1 create www-db
 
 # Atualizar wrangler.jsonc com o database_id retornado
 ```
@@ -240,10 +240,10 @@ CREATE INDEX idx_sessions_expires ON sessions(expires_at);
 #### 2.2 Aplicar migração
 ```bash
 # Local
-pnpm wrangler d1 execute ccp-c3-db --local --file=./migrations/0001_initial_schema.sql
+pnpm wrangler d1 execute www-db --local --file=./migrations/0001_initial_schema.sql
 
 # Produção
-pnpm wrangler d1 execute ccp-c3-db --file=./migrations/0001_initial_schema.sql
+pnpm wrangler d1 execute www-db --file=./migrations/0001_initial_schema.sql
 ```
 
 ---
@@ -729,7 +729,7 @@ function mapId(oldId: string): string {
 #### 8.2 Testes locais
 ```bash
 # Iniciar dev com D1 local
-pnpm wrangler d1 execute ccp-c3-db --local --file=./migrations/0001_initial_schema.sql
+pnpm wrangler d1 execute www-db --local --file=./migrations/0001_initial_schema.sql
 pnpm dev
 ```
 
@@ -740,7 +740,7 @@ pnpm dev
 #### 9.1 Deploy
 ```bash
 # Aplicar migrations em produção
-pnpm wrangler d1 execute ccp-c3-db --file=./migrations/0001_initial_schema.sql
+pnpm wrangler d1 execute www-db --file=./migrations/0001_initial_schema.sql
 
 # Deploy
 pnpm deploy

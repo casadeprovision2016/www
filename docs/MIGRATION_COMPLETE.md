@@ -8,7 +8,7 @@ A migração de **Supabase → Cloudflare D1 + Workers** foi concluída com suce
 
 #### ✅ Fase 1: Preparação do Ambiente
 - Instaladas todas as dependências necessárias
-- Criado D1 database `ccp-c3-db`
+- Criado D1 database `www-db`
 - Configurado `wrangler.jsonc` com bindings
 
 #### ✅ Fase 2: Esquema D1
@@ -128,7 +128,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ## 📊 Database
 
 ### D1 Database Info
-- **Nome:** `ccp-c3-db`
+- **Nome:** `www-db`
 - **ID:** `7237394e-cf46-489f-83f9-b7f389b2b4ed`
 - **Binding:** `DB`
 
@@ -136,10 +136,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ```bash
 # Local
-pnpm wrangler d1 execute ccp-c3-db --local --command="SELECT * FROM users;"
+pnpm wrangler d1 execute www-db --local --command="SELECT * FROM users;"
 
 # Remote
-pnpm wrangler d1 execute ccp-c3-db --remote --command="SELECT * FROM users;"
+pnpm wrangler d1 execute www-db --remote --command="SELECT * FROM users;"
 ```
 
 ### Criar Novos Usuários
@@ -216,14 +216,14 @@ npx tsx scripts/create-admin.ts
 ### Login não funciona
 - Verifique se o admin user foi criado:
   ```bash
-  pnpm wrangler d1 execute ccp-c3-db --local --command="SELECT * FROM users;"
+  pnpm wrangler d1 execute www-db --local --command="SELECT * FROM users;"
   ```
 - Verifique logs do servidor para erros
 
 ### Homepage não carrega eventos
 - Verifique se há eventos no banco:
   ```bash
-  pnpm wrangler d1 execute ccp-c3-db --local --command="SELECT * FROM events;"
+  pnpm wrangler d1 execute www-db --local --command="SELECT * FROM events;"
   ```
 - Adicione eventos de teste via API
 

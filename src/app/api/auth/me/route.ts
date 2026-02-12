@@ -1,3 +1,6 @@
+export const runtime = "edge"
+
+
 import { NextResponse } from 'next/server'
 import { getDB } from '@/lib/db/client'
 import { getSession } from '@/lib/auth/session'
